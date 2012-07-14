@@ -39,6 +39,15 @@ sub Calls {
         #
         # Calls for config files: conf.xml kasp.xml zonelist.xml zonefetch.xml addns.xml
         #
+        ReadConfigs => {
+            out => {
+                file => {
+                    name => 'string',
+                    write => 'integer',
+                    read => 'integer'
+                }
+            }
+        },
         CreateConfig => {
             in => {
                 file => {
@@ -105,6 +114,13 @@ sub Calls {
 =cut
 
 sub Commands {
+    {
+        configs => 1,
+        config => {
+            view => 1,
+            edit => 1
+        }
+    };
 }
 
 =head1 AUTHOR
