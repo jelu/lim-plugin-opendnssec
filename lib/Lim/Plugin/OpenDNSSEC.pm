@@ -35,6 +35,69 @@ sub Module {
 =cut
 
 sub Calls {
+    {
+        #
+        # Calls for config files: conf.xml kasp.xml zonelist.xml zonefetch.xml addns.xml
+        #
+        CreateConfig => {
+            in => {
+                file => {
+                    name => 'string',
+                    content => 'string'
+                }
+            }
+        },
+        ReadConfig => {
+            in => {
+                file => {
+                    name => 'string'
+                }
+            },
+            out => {
+                file => {
+                    name => 'string',
+                    content => 'string'
+                }
+            }
+        },
+        UpdateConfig => {
+            in => {
+                file => {
+                    name => 'string',
+                    content => 'string'
+                }
+            }
+        },
+        DeleteConfig => {
+            in => {
+                file => {
+                    name => 'string'
+                }
+            }
+        },
+        #
+        # Calls for ods-control
+        #
+        UpdateControlStart => {
+            in => {
+                program => {
+                    name => 'string'
+                }
+            }
+        },
+        UpdateControlStop => {
+            in => {
+                program => {
+                    name => 'string'
+                }
+            }
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer setup
+        #
+        CreateSetup => {
+        }
+    };
 }
 
 =head2 function1

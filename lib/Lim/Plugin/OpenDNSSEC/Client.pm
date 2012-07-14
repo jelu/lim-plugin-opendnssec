@@ -2,6 +2,8 @@ package Lim::Plugin::OpenDNSSEC::Client;
 
 use common::sense;
 
+use Lim::Plugin::OpenDNSSEC ();
+
 use base qw(Lim::Component::Client);
 
 =head1 NAME
@@ -14,7 +16,7 @@ Version 0.1
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 =head1 SYNOPSIS
 

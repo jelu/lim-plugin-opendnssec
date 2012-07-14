@@ -2,6 +2,8 @@ package Lim::Plugin::OpenDNSSEC::Server;
 
 use common::sense;
 
+use Lim::Plugin::OpenDNSSEC ();
+
 use base qw(Lim::Component::Server);
 
 =head1 NAME
@@ -14,7 +16,7 @@ Version 0.1
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 =head1 SYNOPSIS
 
@@ -25,6 +27,72 @@ our $VERSION = '0.1';
 =head2 function1
 
 =cut
+
+sub CreateConfig {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadConfig {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateConfig {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteConfig {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateControlStart {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateControlStop {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateSetup {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
 
 =head1 AUTHOR
 

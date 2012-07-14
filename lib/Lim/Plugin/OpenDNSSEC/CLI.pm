@@ -16,7 +16,7 @@ Version 0.1
 
 =cut
 
-our $VERSION = $Lim::Plugin::OpenDNSSEC;
+our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 =head1 SYNOPSIS
 
