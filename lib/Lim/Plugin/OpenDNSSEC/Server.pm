@@ -362,9 +362,70 @@ sub DeleteConfig {
 =cut
 
 sub UpdateControlStart {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{program}) {
+        my @programs;
+        foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
+            $program = lc($program);
+            if ($program eq 'enforcer') {
+                push(@programs, $program);
+            }
+            elsif ($program eq 'signer') {
+                push(@programs, $program);
+            }
+            else {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unknown program "'.$program.'" specified'
+                ));
+                return;
+            }
+        }
+        if (scalar @programs) {
+            weaken($self);
+            my $cmd_cb; $cmd_cb = sub {
+                if (my $program = shift(@programs)) {
+                    my ($stdout, $stderr);
+                    my $cv = AnyEvent::Util::run_cmd
+                        [ 'ods-control', $program, 'start' ],
+                        '<', '/dev/null',
+                        '>', \$stdout,
+                        '2>', \$stderr;
+                    $cv->cb (sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
+                            return;
+                        }
+                        $cmd_cb->();
+                    });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+            $cmd_cb->();
+            return;
+        }
+    }
+    else {
+        my ($stdout, $stderr);
+        weaken($self);
+        my $cv = AnyEvent::Util::run_cmd
+            [ 'ods-control', 'start' ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr;
+        $cv->cb (sub {
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to start OpenDNSSEC');
+                return;
+            }
+            $self->Successful($cb);
+        });
+        return;
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1
@@ -372,9 +433,70 @@ sub UpdateControlStart {
 =cut
 
 sub UpdateControlStop {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{program}) {
+        my @programs;
+        foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
+            $program = lc($program);
+            if ($program eq 'enforcer') {
+                push(@programs, $program);
+            }
+            elsif ($program eq 'signer') {
+                push(@programs, $program);
+            }
+            else {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unknown program "'.$program.'" specified'
+                ));
+                return;
+            }
+        }
+        if (scalar @programs) {
+            weaken($self);
+            my $cmd_cb; $cmd_cb = sub {
+                if (my $program = shift(@programs)) {
+                    my ($stdout, $stderr);
+                    my $cv = AnyEvent::Util::run_cmd
+                        [ 'ods-control', $program, 'stop' ],
+                        '<', '/dev/null',
+                        '>', \$stdout,
+                        '2>', \$stderr;
+                    $cv->cb (sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
+                            return;
+                        }
+                        $cmd_cb->();
+                    });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+            $cmd_cb->();
+            return;
+        }
+    }
+    else {
+        my ($stdout, $stderr);
+        weaken($self);
+        my $cv = AnyEvent::Util::run_cmd
+            [ 'ods-control', 'stop' ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr;
+        $cv->cb (sub {
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to stop OpenDNSSEC');
+                return;
+            }
+            $self->Successful($cb);
+        });
+        return;
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1
