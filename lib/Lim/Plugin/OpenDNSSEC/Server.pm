@@ -608,6 +608,246 @@ sub CreateEnforcerSetup {
     });
 }
 
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerUpdate {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateEnforcerZone {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerZoneList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteEnforcerZone {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerRepositoryList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerPolicyList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerPolicyExport {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteEnforcerPolicyPurge {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerKeyList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerKeyExport {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateEnforcerKeyImport {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerKeyRollover {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteEnforcerKeyPurge {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateEnforcerKeyGenerate {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerKeyKskRetire {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerKeyDsSeen {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerBackupPrepare {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerBackupCommit {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerBackupRollback {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcerBackupDone {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerBackupList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerRolloverList {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateEnforcerDatabaseBackup {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcerZonelistExport {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

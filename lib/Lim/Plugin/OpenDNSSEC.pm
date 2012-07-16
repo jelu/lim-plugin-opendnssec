@@ -105,6 +105,147 @@ sub Calls {
         # Call for ods-ksmutil/ods-enforcer setup
         #
         CreateEnforcerSetup => {
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer update *
+        #
+        UpdateEnforcerUpdate => {
+            in => {
+                update => {
+                    section => 'string'
+                }
+            }
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer zone *
+        #
+        CreateEnforcerZone => {
+            in => {
+                zone => {
+                    name => 'string',
+                    policy => 'string',
+                    signerconf => 'string',
+                    input => 'string',
+                    output => 'string',
+                    no_xml => 'bool'
+                }
+            }
+        },
+        ReadEnforcerZoneList => {
+            out => {
+                zone => {
+                    name => 'string',
+                    policy => 'string'
+                }
+            }
+        },
+        DeleteEnforcerZone => {
+            in => {
+                zone => {
+                    all => 'bool',
+                    name => 'string',
+                    no_xml => 'bool'
+                },
+            }
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer repository *
+        #
+        ReadEnforcerRepositoryList => {
+            out => {
+                repository => {
+                    name => 'string',
+                    capacity => 'integer',
+                    require_backup => 'bool'
+                }
+            }
+        },
+        #
+        # Calls for ods-ksmutil/ods-enforcer policy *
+        #
+        ReadEnforcerPolicyList => {
+            out => {
+                policy => {
+                    name => 'string',
+                    description => 'string'
+                }
+            }
+        },
+        ReadEnforcerPolicyExport => {
+            in => {
+                policy => {
+                    all => 'bool',
+                    name => 'string'
+                }
+            },
+            out => {
+                content => 'string'
+            }
+        },
+        DeleteEnforcerPolicyPurge => {
+        },
+        #
+        # Calls for ods-ksmutil/ods-enforcer key *
+        #
+        ReadEnforcerKeyList => {
+            
+        },
+        ReadEnforcerKeyExport => {
+            
+        },
+        CreateEnforcerKeyImport => {
+            
+        },
+        UpdateEnforcerKeyRollover => {
+            
+        },
+        DeleteEnforcerKeyPurge => {
+            
+        },
+        CreateEnforcerKeyGenerate => {
+            
+        },
+        UpdateEnforcerKeyKskRetire => {
+            
+        },
+        UpdateEnforcerKeyDsSeen => {
+            
+        },
+        #
+        # Calls for ods-ksmutil/ods-enforcer backup *
+        #
+        UpdateEnforcerBackupPrepare => {
+            
+        },
+        UpdateEnforcerBackupCommit => {
+            
+        },
+        UpdateEnforcerBackupRollback => {
+            
+        },
+        UpdateEnforcerBackupDone => {
+            
+        },
+        ReadEnforcerBackupList => {
+            
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer rollover list
+        #
+        ReadEnforcerRolloverList => {
+            
+        },
+        #
+        # Call for ods-ksmutil/ods-enforcer database backup
+        #
+        CreateEnforcerDatabaseBackup => {
+            
+        },
+        #
+        # Calls for ods-ksmutil/ods-enforcer zonelist export
+        #
+        ReadEnforcerZonelistExport => {
+            
         }
     };
 }
