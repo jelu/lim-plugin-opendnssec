@@ -119,6 +119,14 @@ sub Commands {
         config => {
             view => 1,
             edit => 1
+        },
+        start => {
+            enforcer => 1,
+            signer => 1
+        },
+        stop => {
+            enforcer => 1,
+            signer => 1
         }
     };
 }

@@ -37,25 +37,25 @@ sub configs {
     
     weaken($self);
     $opendnssec->ReadConfigs(sub {
-		my ($call, $response) = @_;
-		
-		if ($call->Successful) {
-		    $self->cli->println('OpenDNSSEC config files found:');
-		    if (exists $response->{file}) {
-		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
-		            $self->cli->println($file->{name},
-		              ' (readable: ', ($file->{read} ? 'yes' : 'no'),
-		              ' writable: ', ($file->{read} ? 'yes' : 'no'),
-		              ')'
-		              );
-		        }
-		    }
-			$self->Successful;
-		}
-		else {
-			$self->Error($call->Error);
-		}
-		undef($opendnssec);
+        my ($call, $response) = @_;
+        
+        if ($call->Successful) {
+            $self->cli->println('OpenDNSSEC config files found:');
+            if (exists $response->{file}) {
+                foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
+                    $self->cli->println($file->{name},
+                        ' (readable: ', ($file->{read} ? 'yes' : 'no'),
+                        ' writable: ', ($file->{read} ? 'yes' : 'no'),
+                        ')'
+                        );
+                }
+            }
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($opendnssec);
     });
 }
 
@@ -84,21 +84,21 @@ sub config {
                 my ($call, $response) = @_;
                 
                 if ($call->Successful) {
-        		    if (exists $response->{file}) {
-        		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
-        		            if (ref($response->{file}) eq 'ARRAY') {
-        		                $file->{content} =~ s/^/$file->{name}: /gm;
+                    if (exists $response->{file}) {
+                        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
+                            if (ref($response->{file}) eq 'ARRAY') {
+                                $file->{content} =~ s/^/$file->{name}: /gm;
                                 $self->cli->println($file->{content});
-        		            }
-        		            else {
+                            }
+                            else {
                                 $self->cli->println($file->{content});
-        		            }
-        		        }
-        		    }
-                	$self->Successful;
+                            }
+                        }
+                    }
+                    $self->Successful;
                 }
                 else {
-                	$self->Error($call->Error);
+                    $self->Error($call->Error);
                 }
                 undef($opendnssec);
             });
@@ -132,28 +132,168 @@ sub config {
                                     
                                     if ($call->Successful) {
                                         $self->cli->println('Config updated');
-                                    	$self->Successful;
+                                        $self->Successful;
                                     }
                                     else {
-                                    	$self->Error($call->Error);
+                                        $self->Error($call->Error);
                                     }
                                     undef($opendnssec);
                                 });
                             }
                             else {
                                 $self->cli->println('Config not update, no change');
-                            	$self->Successful;
+                                $self->Successful;
                             }
                             undef($w);
                         });
                 }
                 else {
-                	$self->Error($call->Error);
+                    $self->Error($call->Error);
                 }
                 undef($opendnssec);
             });
             return;
         }
+    }
+    $self->Error;
+}
+
+=head2 function1
+
+=cut
+
+sub start {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    if (!scalar @$args) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStart(sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC started');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'enforcer') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStart({
+            program => {
+                name => 'enforcer'
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Enforcer started');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'signer') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStart({
+            program => {
+                name => 'signer'
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Signer started');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    $self->Error;
+}
+
+=head2 function1
+
+=cut
+
+sub stop {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    if (!scalar @$args) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStop(sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC stopped');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'enforcer') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStop({
+            program => {
+                name => 'enforcer'
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Enforcer stopped');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'signer') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateControlStop({
+            program => {
+                name => 'signer'
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Signer stopped');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
     }
     $self->Error;
 }
