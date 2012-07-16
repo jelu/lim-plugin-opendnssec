@@ -367,19 +367,21 @@ sub UpdateControlStart {
     if (exists $q->{program}) {
         my @programs;
         foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
-            $program = lc($program);
-            if ($program eq 'enforcer') {
-                push(@programs, $program);
-            }
-            elsif ($program eq 'signer') {
-                push(@programs, $program);
-            }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'Unknown program "'.$program.'" specified'
-                ));
-                return;
+            if (exists $program->{name}) {
+                my $name = lc($program->{name});
+                if ($name eq 'enforcer') {
+                    push(@programs, $name);
+                }
+                elsif ($name eq 'signer') {
+                    push(@programs, $name);
+                }
+                else {
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Unknown program "'.$name.'" specified'
+                    ));
+                    return;
+                }
             }
         }
         if (scalar @programs) {
@@ -438,19 +440,21 @@ sub UpdateControlStop {
     if (exists $q->{program}) {
         my @programs;
         foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
-            $program = lc($program);
-            if ($program eq 'enforcer') {
-                push(@programs, $program);
-            }
-            elsif ($program eq 'signer') {
-                push(@programs, $program);
-            }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'Unknown program "'.$program.'" specified'
-                ));
-                return;
+            if (exists $program->{name}) {
+                my $name = lc($program->{name});
+                if ($name eq 'enforcer') {
+                    push(@programs, $name);
+                }
+                elsif ($name eq 'signer') {
+                    push(@programs, $name);
+                }
+                else {
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Unknown program "'.$name.'" specified'
+                    ));
+                    return;
+                }
             }
         }
         if (scalar @programs) {
