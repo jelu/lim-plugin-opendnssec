@@ -388,13 +388,12 @@ sub UpdateControlStart {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 if (my $program = shift(@programs)) {
-                    my ($stdout, $stderr);
                     my $cv = AnyEvent::Util::run_cmd
                         [ 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
-                        '>', \$stdout,
-                        '2>', \$stderr;
-                    $cv->cb (sub {
+                        '>', '/dev/null',
+                        '2>', '/dev/null';
+                    $cv->cb(sub {
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
                             return;
@@ -411,14 +410,13 @@ sub UpdateControlStart {
         }
     }
     else {
-        my ($stdout, $stderr);
         weaken($self);
         my $cv = AnyEvent::Util::run_cmd
             [ 'ods-control', 'start' ],
             '<', '/dev/null',
-            '>', \$stdout,
-            '2>', \$stderr;
-        $cv->cb (sub {
+            '>', '/dev/null',
+            '2>', '/dev/null';
+        $cv->cb(sub {
             if (shift->recv) {
                 $self->Error($cb, 'Unable to start OpenDNSSEC');
                 return;
@@ -461,13 +459,12 @@ sub UpdateControlStop {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 if (my $program = shift(@programs)) {
-                    my ($stdout, $stderr);
                     my $cv = AnyEvent::Util::run_cmd
                         [ 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
-                        '>', \$stdout,
-                        '2>', \$stderr;
-                    $cv->cb (sub {
+                        '>', '/dev/null',
+                        '2>', '/dev/null';
+                    $cv->cb(sub {
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
                             return;
@@ -484,14 +481,13 @@ sub UpdateControlStop {
         }
     }
     else {
-        my ($stdout, $stderr);
         weaken($self);
         my $cv = AnyEvent::Util::run_cmd
             [ 'ods-control', 'stop' ],
             '<', '/dev/null',
-            '>', \$stdout,
-            '2>', \$stderr;
-        $cv->cb (sub {
+            '>', '/dev/null',
+            '2>', '/dev/null';
+        $cv->cb(sub {
             if (shift->recv) {
                 $self->Error($cb, 'Unable to stop OpenDNSSEC');
                 return;
