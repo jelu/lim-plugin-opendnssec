@@ -848,6 +848,96 @@ sub ReadEnforcerZonelistExport {
     $self->Error($cb, 'Not Implemented');
 }
 
+=head2 function1
+
+=cut
+
+sub ReadSignerZones {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerSign {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerClear {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadSignerQueue {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerFlush {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerUpdate {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadSignerRunning {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerReload {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSignerVerbosity {
+    my ($self, $cb) = @_;
+
+    $self->Error($cb, 'Not Implemented');
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

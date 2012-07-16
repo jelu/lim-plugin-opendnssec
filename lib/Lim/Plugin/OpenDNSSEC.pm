@@ -242,9 +242,39 @@ sub Calls {
             
         },
         #
-        # Calls for ods-ksmutil/ods-enforcer zonelist export
+        # Call for ods-ksmutil/ods-enforcer zonelist export
         #
         ReadEnforcerZonelistExport => {
+            
+        },
+        #
+        # Calls for ods-signer *
+        #
+        ReadSignerZones => {
+            
+        },
+        UpdateSignerSign => {
+            
+        },
+        UpdateSignerClear => {
+            
+        },
+        ReadSignerQueue => {
+            
+        },
+        UpdateSignerFlush => {
+            
+        },
+        UpdateSignerUpdate => {
+            
+        },
+        ReadSignerRunning => {
+            
+        },
+        UpdateSignerReload => {
+            
+        },
+        UpdateSignerVerbosity => {
             
         }
     };
