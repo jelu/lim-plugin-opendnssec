@@ -66,8 +66,10 @@ sub Init {
 
     $self->{bin} = {
         control => 0,
+        enforcerd => 0,
         ksmutil => 0,
-        signer => 0
+        signer => 0,
+        signerd => 0
     };
     
     my ($stdout, $stderr);
@@ -82,6 +84,36 @@ sub Init {
         }
         else {
             $self->{logger}->warn('Unable to find "ods-control" executable, module functions limited');
+        }
+    }
+
+    my $cv = AnyEvent::Util::run_cmd [ 'ods-enforcerd', '-V' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr;
+    if ($cv->recv) {
+        $self->{logger}->warn('Unable to find "ods-enforcerd" executable, module functions limited');
+    }
+    else {
+        if ($stderr =~ /opendnssec\s+version\s+([0-9]+)\.([0-9]+)\.([0-9]+)/o) {
+            my ($major,$minor,$patch) = ($1, $2, $3);
+            
+            if ($major > 0 and $major < 10 and $minor > -1 and $minor < 10 and $patch > -1 and $patch < 100) {
+                my $version = ($major * 1000000) + ($minor * 1000) + $patch;
+                
+                unless ($version >= OPENDNSSEC_VERSION_MIN and $version <= OPENDNSSEC_VERSION_MAX) {
+                    $self->{logger}->warn('Unsupported "ods-enforcerd" executable version, unable to continue');
+                }
+                else {
+                    $self->{bin}->{enforcerd} = $version;
+                }
+            }
+            else {
+                $self->{logger}->warn('Invalid "ods-enforcerd" version, module functions limited');
+            }
+        }
+        else {
+            $self->{logger}->warn('Unable to get "ods-enforcerd" version, module functions limited');
         }
     }
 
@@ -131,7 +163,7 @@ sub Init {
                     $self->{logger}->warn('Unsupported "ods-signer" executable version, unable to continue');
                 }
                 else {
-                    $self->{bin}->{ksmutil} = $version;
+                    $self->{bin}->{signer} = $version;
                 }
             }
             else {
@@ -142,14 +174,51 @@ sub Init {
             $self->{logger}->warn('Unable to get "ods-signer" version, module functions limited');
         }
     }
-    
-    if ($self->{bin}->{ksmutil} and $self->{bin}->{signer}) {
-        unless ($self->{bin}->{ksmutil} == $self->{bin}->{signer}) {
-            die 'Missmatch version between Enforcer and Signer tools, disabling module';
+
+    my $cv = AnyEvent::Util::run_cmd [ 'ods-signerd', '-V' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr;
+    if ($cv->recv) {
+        $self->{logger}->warn('Unable to find "ods-signerd" executable, module functions limited');
+    }
+    else {
+        if ($stdout =~ /opendnssec\s+version\s+([0-9]+)\.([0-9]+)\.([0-9]+)/o) {
+            my ($major,$minor,$patch) = ($1, $2, $3);
+            
+            if ($major > 0 and $major < 10 and $minor > -1 and $minor < 10 and $patch > -1 and $patch < 100) {
+                my $version = ($major * 1000000) + ($minor * 1000) + $patch;
+                
+                unless ($version >= OPENDNSSEC_VERSION_MIN and $version <= OPENDNSSEC_VERSION_MAX) {
+                    $self->{logger}->warn('Unsupported "ods-signerd" executable version, unable to continue');
+                }
+                else {
+                    $self->{bin}->{signerd} = $version;
+                }
+            }
+            else {
+                $self->{logger}->warn('Invalid "ods-signerd" version, module functions limited');
+            }
+        }
+        else {
+            $self->{logger}->warn('Unable to get "ods-signerd" version, module functions limited');
         }
     }
     
-    $self->{version} = $self->{bin}->{ksmutil};
+    my $version = 0;
+    foreach my $program (keys %{$self->{bin}}) {
+        if ($program eq 'control') {
+            next;
+        }
+        if ($self->{bin}->{$program}) {
+            if ($version and $version != $self->{bin}->{$program}) {
+                die 'Missmatch version between Enforcer and Signer tools, disabling module';
+            }
+            $version = $self->{bin}->{$program};
+        }
+    }
+    
+    $self->{version} = $version;
 }
 
 =head2 function1
@@ -364,15 +433,20 @@ sub DeleteConfig {
 sub UpdateControlStart {
     my ($self, $cb, $q) = @_;
     
+    unless ($self->{bin}->{control}) {
+        $self->Error($cb, 'No "ods-control" executable found or unsupported version, unable to continue');
+        return;
+    }
+
     if (exists $q->{program}) {
         my @programs;
         foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
             if (exists $program->{name}) {
                 my $name = lc($program->{name});
-                if ($name eq 'enforcer') {
+                if ($name eq 'enforcer' and $self->{bin}->{enforcerd}) {
                     push(@programs, $name);
                 }
-                elsif ($name eq 'signer') {
+                elsif ($name eq 'signer' and $self->{bin}->{signerd}) {
                     push(@programs, $name);
                 }
                 else {
@@ -435,15 +509,20 @@ sub UpdateControlStart {
 sub UpdateControlStop {
     my ($self, $cb, $q) = @_;
     
+    unless ($self->{bin}->{control}) {
+        $self->Error($cb, 'No "ods-control" executable found or unsupported version, unable to continue');
+        return;
+    }
+
     if (exists $q->{program}) {
         my @programs;
         foreach my $program (ref($q->{program}) eq 'ARRAY' ? @{$q->{program}} : $q->{program}) {
             if (exists $program->{name}) {
                 my $name = lc($program->{name});
-                if ($name eq 'enforcer') {
+                if ($name eq 'enforcer' and $self->{bin}->{enforcerd}) {
                     push(@programs, $name);
                 }
-                elsif ($name eq 'signer') {
+                elsif ($name eq 'signer' and $self->{bin}->{signerd}) {
                     push(@programs, $name);
                 }
                 else {
@@ -503,10 +582,30 @@ sub UpdateControlStop {
 
 =cut
 
-sub CreateSetup {
+sub CreateEnforcerSetup {
     my ($self, $cb) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    # TODO confirm with user
+
+    weaken($self);
+    my ($stdout, $stderr);
+    my $stdin = "Y\r";
+    my $cv = AnyEvent::Util::run_cmd [ 'ods-ksmutil', 'setup' ],
+        '<', \$stdin,
+        '>', \$stdout,
+        '2>', \$stderr;
+    $cv->cb(sub {
+        if (shift->recv) {
+            $self->Error($cb, 'Unable to setup OpenDNSSEC');
+            return;
+        }
+        $self->Successful($cb);
+    });
 }
 
 =head1 AUTHOR

@@ -298,6 +298,29 @@ sub stop {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub setup {
+    my ($self) = @_;
+    my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+    
+    weaken($self);
+    $opendnssec->CreateEnforcerSetup(sub {
+        my ($call, $response) = @_;
+        
+        if ($call->Successful) {
+            $self->cli->println('OpenDNSSEC setup successful');
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($opendnssec);
+    });
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

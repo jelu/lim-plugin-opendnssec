@@ -104,7 +104,7 @@ sub Calls {
         #
         # Call for ods-ksmutil/ods-enforcer setup
         #
-        CreateSetup => {
+        CreateEnforcerSetup => {
         }
     };
 }
@@ -127,7 +127,8 @@ sub Commands {
         stop => {
             enforcer => 1,
             signer => 1
-        }
+        },
+        setup => 1
     };
 }
 
