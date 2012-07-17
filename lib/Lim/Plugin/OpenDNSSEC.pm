@@ -36,6 +36,15 @@ sub Module {
 
 sub Calls {
     {
+        ReadVersion => {
+            out => {
+                version => 'string required',
+                program => {
+                    name => 'string required',
+                    version => 'string required'
+                }
+            }
+        },
         #
         # Calls for config files: conf.xml kasp.xml zonelist.xml zonefetch.xml addns.xml
         #
@@ -286,6 +295,7 @@ sub Calls {
 
 sub Commands {
     {
+        version => 1,
         configs => 1,
         config => {
             view => 1,

@@ -71,6 +71,7 @@ sub Init {
         signer => 0,
         signerd => 0
     };
+    $self->{bin_version} = {};
     
     my ($stdout, $stderr);
     my $cv = AnyEvent::Util::run_cmd [ 'ods-control' ],
@@ -106,6 +107,7 @@ sub Init {
                 }
                 else {
                     $self->{bin}->{enforcerd} = $version;
+                    $self->{bin_version}->{enforcerd} = $major.'.'.$minor.'.'.$patch;
                 }
             }
             else {
@@ -136,6 +138,7 @@ sub Init {
                 }
                 else {
                     $self->{bin}->{ksmutil} = $version;
+                    $self->{bin_version}->{ksmutil} = $major.'.'.$minor.'.'.$patch;
                 }
             }
             else {
@@ -164,6 +167,7 @@ sub Init {
                 }
                 else {
                     $self->{bin}->{signer} = $version;
+                    $self->{bin_version}->{signer} = $major.'.'.$minor.'.'.$patch;
                 }
             }
             else {
@@ -194,6 +198,7 @@ sub Init {
                 }
                 else {
                     $self->{bin}->{signerd} = $version;
+                    $self->{bin_version}->{signerd} = $major.'.'.$minor.'.'.$patch;
                 }
             }
             else {
@@ -279,6 +284,26 @@ sub _ScanConfig {
     }
     
     return \%file;
+}
+
+=head2 function1
+
+=cut
+
+sub ReadVersion {
+    my ($self, $cb) = @_;
+    my @program;
+    
+    foreach my $program (keys %{$self->{bin_version}}) {
+        push(@program, { name => 'ods-'.$program, version => $self->{bin_version}->{$program} });
+    }
+
+    if (scalar @program) {
+        $self->Successful($cb, { version => $VERSION, program => \@program });
+    }
+    else {
+        $self->Successful($cb, { version => $VERSION });
+    }
 }
 
 =head2 function1

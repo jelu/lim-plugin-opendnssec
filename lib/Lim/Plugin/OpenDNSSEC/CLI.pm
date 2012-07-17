@@ -31,6 +31,35 @@ our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 =cut
 
+sub version {
+    my ($self) = @_;
+    my $softhsm = Lim::Plugin::OpenDNSSEC->Client;
+    
+    weaken($self);
+    $softhsm->ReadVersion(sub {
+		my ($call, $response) = @_;
+		
+		if ($call->Successful) {
+		    $self->cli->println('OpenDNSSEC plugin version ', $response->{version});
+		    if (exists $response->{program}) {
+		        $self->cli->println('OpenDNSSEC programs:');
+		        foreach my $program (ref($response->{program}) eq 'ARRAY' ? @{$response->{program}} : $response->{program}) {
+		            $self->cli->println('    ', $program->{name}, ' version ', $program->{version});
+		        }
+		    }
+			$self->Successful;
+		}
+		else {
+			$self->Error($call->Error);
+		}
+		undef($softhsm);
+    });
+}
+
+=head2 function1
+
+=cut
+
 sub configs {
     my ($self) = @_;
     my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
