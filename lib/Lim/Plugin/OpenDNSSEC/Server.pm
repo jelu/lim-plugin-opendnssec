@@ -5,11 +5,11 @@ use common::sense;
 use Fcntl qw(:seek);
 use IO::File ();
 use Digest::SHA ();
-use AnyEvent ();
-use AnyEvent::Util ();
 use Scalar::Util qw(weaken);
 
 use Lim::Plugin::OpenDNSSEC ();
+
+use Lim::Util ();
 
 use base qw(Lim::Component::Server);
 
@@ -74,7 +74,7 @@ sub Init {
     $self->{bin_version} = {};
     
     my ($stdout, $stderr);
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-control' ],
+    my $cv = Lim::Util::run_cmd [ 'ods-control' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -88,7 +88,7 @@ sub Init {
         }
     }
 
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-enforcerd', '-V' ],
+    my $cv = Lim::Util::run_cmd [ 'ods-enforcerd', '-V' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -119,7 +119,7 @@ sub Init {
         }
     }
 
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-ksmutil', '--version' ],
+    my $cv = Lim::Util::run_cmd [ 'ods-ksmutil', '--version' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -150,7 +150,7 @@ sub Init {
         }
     }
 
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-signer', '--help' ],
+    my $cv = Lim::Util::run_cmd [ 'ods-signer', '--help' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -179,7 +179,7 @@ sub Init {
         }
     }
 
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-signerd', '-V' ],
+    my $cv = Lim::Util::run_cmd [ 'ods-signerd', '-V' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -487,18 +487,19 @@ sub UpdateControlStart {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 if (my $program = shift(@programs)) {
-                    my $cv = AnyEvent::Util::run_cmd
+                    Lim::Util::run_cmd
                         [ 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
                         '>', '/dev/null',
-                        '2>', '/dev/null';
-                    $cv->cb(sub {
-                        if (shift->recv) {
-                            $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
-                            return;
-                        }
-                        $cmd_cb->();
-                    });
+                        '2>', '/dev/null',
+                        timeout => 30,
+                        cb => sub {
+                            if (shift->recv) {
+                                $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
+                                return;
+                            }
+                            $cmd_cb->();
+                        };
                 }
                 else {
                     $self->Successful($cb);
@@ -510,18 +511,19 @@ sub UpdateControlStart {
     }
     else {
         weaken($self);
-        my $cv = AnyEvent::Util::run_cmd
+        Lim::Util::run_cmd
             [ 'ods-control', 'start' ],
             '<', '/dev/null',
             '>', '/dev/null',
-            '2>', '/dev/null';
-        $cv->cb(sub {
-            if (shift->recv) {
-                $self->Error($cb, 'Unable to start OpenDNSSEC');
-                return;
-            }
-            $self->Successful($cb);
-        });
+            '2>', '/dev/null',
+            timeout => 30,
+            cb => sub {
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to start OpenDNSSEC');
+                    return;
+                }
+                $self->Successful($cb);
+            };
         return;
     }
     $self->Successful($cb);
@@ -563,18 +565,19 @@ sub UpdateControlStop {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 if (my $program = shift(@programs)) {
-                    my $cv = AnyEvent::Util::run_cmd
+                    Lim::Util::run_cmd
                         [ 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
                         '>', '/dev/null',
-                        '2>', '/dev/null';
-                    $cv->cb(sub {
-                        if (shift->recv) {
-                            $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
-                            return;
-                        }
-                        $cmd_cb->();
-                    });
+                        '2>', '/dev/null',
+                        timeout => 30,
+                        cb => sub {
+                            if (shift->recv) {
+                                $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
+                                return;
+                            }
+                            $cmd_cb->();
+                        };
                 }
                 else {
                     $self->Successful($cb);
@@ -586,18 +589,19 @@ sub UpdateControlStop {
     }
     else {
         weaken($self);
-        my $cv = AnyEvent::Util::run_cmd
+        Lim::Util::run_cmd
             [ 'ods-control', 'stop' ],
             '<', '/dev/null',
             '>', '/dev/null',
-            '2>', '/dev/null';
-        $cv->cb(sub {
-            if (shift->recv) {
-                $self->Error($cb, 'Unable to stop OpenDNSSEC');
-                return;
-            }
-            $self->Successful($cb);
-        });
+            '2>', '/dev/null',
+            timeout => 30,
+            cb => sub {
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to stop OpenDNSSEC');
+                    return;
+                }
+                $self->Successful($cb);
+            };
         return;
     }
     $self->Successful($cb);
@@ -620,17 +624,18 @@ sub CreateEnforcerSetup {
     weaken($self);
     my ($stdout, $stderr);
     my $stdin = "Y\r";
-    my $cv = AnyEvent::Util::run_cmd [ 'ods-ksmutil', 'setup' ],
+    Lim::Util::run_cmd [ 'ods-ksmutil', 'setup' ],
         '<', \$stdin,
         '>', \$stdout,
-        '2>', \$stderr;
-    $cv->cb(sub {
-        if (shift->recv) {
-            $self->Error($cb, 'Unable to setup OpenDNSSEC');
-            return;
-        }
-        $self->Successful($cb);
-    });
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to setup OpenDNSSEC');
+                return;
+            }
+            $self->Successful($cb);
+        };
 }
 
 =head2 function1

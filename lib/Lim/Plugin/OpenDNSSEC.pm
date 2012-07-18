@@ -38,10 +38,10 @@ sub Calls {
     {
         ReadVersion => {
             out => {
-                version => 'string required',
+                version => 'string',
                 program => {
-                    name => 'string required',
-                    version => 'string required'
+                    name => 'string',
+                    version => 'string'
                 }
             }
         },
@@ -60,6 +60,7 @@ sub Calls {
         CreateConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string',
                     content => 'string'
                 }
@@ -68,6 +69,7 @@ sub Calls {
         ReadConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string'
                 }
             },
@@ -81,6 +83,7 @@ sub Calls {
         UpdateConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string',
                     content => 'string'
                 }
@@ -89,6 +92,7 @@ sub Calls {
         DeleteConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string'
                 }
             }
@@ -131,6 +135,7 @@ sub Calls {
         CreateEnforcerZone => {
             in => {
                 zone => {
+                    '' => 'required',
                     name => 'string',
                     policy => 'string',
                     signerconf => 'string',
@@ -151,6 +156,7 @@ sub Calls {
         DeleteEnforcerZone => {
             in => {
                 zone => {
+                    '' => 'required',
                     all => 'bool',
                     name => 'string',
                     no_xml => 'bool'
@@ -183,12 +189,16 @@ sub Calls {
         ReadEnforcerPolicyExport => {
             in => {
                 policy => {
-                    all => 'bool',
-                    name => 'string'
+                    '' => 'required',
+                    all => 'bool optional',
+                    name => 'string optional'
                 }
             },
             out => {
-                content => 'string'
+                policy => {
+                    name => 'string',
+                    content => 'string'
+                }
             }
         },
         DeleteEnforcerPolicyPurge => {
