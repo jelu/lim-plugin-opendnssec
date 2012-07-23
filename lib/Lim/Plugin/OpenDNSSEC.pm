@@ -327,7 +327,8 @@ sub Commands {
             conf => 1
         },
         zone => {
-            add => 1
+            add => 1,
+            list => 1
         }
     };
 }

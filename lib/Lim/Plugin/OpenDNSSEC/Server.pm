@@ -772,8 +772,49 @@ sub CreateEnforcerZone {
 
 sub ReadEnforcerZoneList {
     my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    weaken($self);
+    my ($data, $stderr, @zones);
+    Lim::Util::run_cmd [ 'ods-ksmutil', 'zone', 'list' ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    if ($line =~ /^Found\s+Zone:\s+([^;]+);\s+on\s+policy\s+(.+)$/o) {
+                        push(@zones, {
+                            name => $1,
+                            policy => $2
+                        });
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get Enforcer zone list');
+                return;
+            }
+            if (scalar @zones == 1) {
+                $self->Successful($cb, { zone => $zones[0] });
+            }
+            elsif (scalar @zones) {
+                $self->Successful($cb, { zone => \@zones });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head2 function1

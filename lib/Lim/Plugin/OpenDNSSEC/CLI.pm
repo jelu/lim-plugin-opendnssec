@@ -457,6 +457,28 @@ sub zone {
         });
         return;
     }
+    elsif ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->ReadEnforcerZoneList(sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+    		    if (exists $response->{zone}) {
+    		        $self->cli->println('OpenDNSSEC Enforcer Zone List:');
+    		        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+    		            $self->cli->println($zone->{name}, ' (policy ', $zone->{policy}, ')');
+    		        }
+    		    }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 
