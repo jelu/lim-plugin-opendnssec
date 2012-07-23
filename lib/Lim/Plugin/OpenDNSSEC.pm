@@ -141,7 +141,7 @@ sub Calls {
                     signerconf => 'string',
                     input => 'string',
                     output => 'string',
-                    no_xml => 'bool'
+                    no_xml => 'bool optional'
                 }
             }
         },
@@ -325,6 +325,9 @@ sub Commands {
             kasp => 1,
             zonelist => 1,
             conf => 1
+        },
+        zone => {
+            add => 1
         }
     };
 }

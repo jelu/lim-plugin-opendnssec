@@ -721,9 +721,49 @@ sub UpdateEnforcerUpdate {
 =cut
 
 sub CreateEnforcerZone {
-    my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+    if (scalar @zones) {
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            if (my $zone = shift(@zones)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'zone', 'add',
+                        '--zone', $zone->{name},
+                        '--policy', $zone->{policy},
+                        '--signerconf', $zone->{signerconf},
+                        '--input', $zone->{input},
+                        '--output', $zone->{output},
+                        (exists $zone->{no_xml} and $zone->{no_xml} ? '--no-xml' : ())
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 10,
+                    cb => sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to create zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
+        $cmd_cb->();
+        return;
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1

@@ -195,6 +195,11 @@ sub start {
     my ($self, $cmd) = @_;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
 
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
+
     if (!scalar @$args) {
         my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
         weaken($self);
@@ -264,6 +269,11 @@ sub start {
 sub stop {
     my ($self, $cmd) = @_;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
 
     if (!scalar @$args) {
         my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
@@ -350,7 +360,6 @@ sub setup {
     });
 }
 
-
 =head2 function1
 
 =cut
@@ -358,6 +367,11 @@ sub setup {
 sub update {
     my ($self, $cmd) = @_;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
 
     if (!scalar @$args or $args->[0] eq 'all') {
         my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
@@ -388,6 +402,52 @@ sub update {
             
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Enforcer configuration "', $args->[0], '" updated');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    $self->Error;
+}
+
+=head2 function1
+
+=cut
+
+sub zone {
+    my ($self, $cmd) = @_;
+    my $xml = 1;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'xml!' => \$xml
+    );
+
+    unless ($getopt and scalar @$args) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'add' and scalar @$args == 6) {
+        my (undef, $zone, $policy, $signerconf, $input, $output) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->CreateEnforcerZone({
+            zone => {
+                name => $zone,
+                policy => $policy,
+                signerconf => $signerconf,
+                input => $input,
+                output => $output,
+                no_xml => $xml ? 0 : 1
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('Zone ', $zone, ' added');
                 $self->Successful;
             }
             else {
