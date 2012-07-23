@@ -319,7 +319,13 @@ sub Commands {
             enforcer => 1,
             signer => 1
         },
-        setup => 1
+        setup => 1,
+        update => {
+            all => 1,
+            kasp => 1,
+            zonelist => 1,
+            conf => 1
+        }
     };
 }
 

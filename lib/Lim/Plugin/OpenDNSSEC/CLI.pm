@@ -350,6 +350,56 @@ sub setup {
     });
 }
 
+
+=head2 function1
+
+=cut
+
+sub update {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    if (!scalar @$args or $args->[0] eq 'all') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateEnforcerUpdate(sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Enforcer configuration updated');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    else {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateEnforcerUpdate({
+            update => {
+                section => $args->[0]
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('OpenDNSSEC Enforcer configuration "', $args->[0], '" updated');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

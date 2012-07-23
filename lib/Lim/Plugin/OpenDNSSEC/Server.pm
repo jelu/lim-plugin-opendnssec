@@ -643,9 +643,81 @@ sub CreateEnforcerSetup {
 =cut
 
 sub UpdateEnforcerUpdate {
-    my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my %section = (
+        kasp => 1,
+        zonelist => 1,
+        conf => 1
+    );
+    
+    if (exists $q->{update}) {
+        my @sections;
+        foreach my $section (ref($q->{update}) eq 'ARRAY' ? @{$q->{update}} : $q->{update}) {
+            my $name = lc($section->{section});
+            
+            if (exists $section{$name}) {
+                push(@sections, $name);
+            }
+            else {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unknown Enforcer configuration section "'.$name.'" specified'
+                ));
+                return;
+            }
+        }
+        if (scalar @sections) {
+            weaken($self);
+            my $cmd_cb; $cmd_cb = sub {
+                if (my $section = shift(@sections)) {
+                    my ($stdout, $stderr);
+                    Lim::Util::run_cmd
+                        [ 'ods-ksmutil', 'update', $section ],
+                        '<', '/dev/null',
+                        '>', \$stdout,
+                        '2>', \$stderr,
+                        timeout => 30,
+                        cb => sub {
+                            if (shift->recv) {
+                                $self->Error($cb, 'Unable to update Enforcer configuration section '.$section);
+                                return;
+                            }
+                            $cmd_cb->();
+                        };
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+            $cmd_cb->();
+            return;
+        }
+    }
+    else {
+        my ($stdout, $stderr);
+        weaken($self);
+        Lim::Util::run_cmd
+            [ 'ods-ksmutil', 'update', 'all' ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to update all Enforcer configuration sections');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+        return;
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1
