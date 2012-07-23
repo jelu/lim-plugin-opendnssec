@@ -338,42 +338,40 @@ sub ReadConfig {
     my $files = $self->_ScanConfig;
     my $result = {};
 
-    if (exists $q->{file}) {
-        foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
-            if (exists $files->{$read->{name}}) {
-                my $file = $files->{$read->{name}};
-                
-                if ($file->{read} and defined (my $fh = IO::File->new($file->{name}))) {
-                    my ($tell, $content);
-                    $fh->seek(0, SEEK_END);
-                    $tell = $fh->tell;
-                    $fh->seek(0, SEEK_SET);
-                    if ($fh->read($content, $tell) == $tell) {
-                        if (exists $result->{file}) {
-                            unless (ref($result->{file}) eq 'ARRAY') {
-                                $result->{file} = [ $result->{file} ];
-                            }
-                            push(@{$result->{file}}, {
-                                name => $file->{name},
-                                content => $content
-                            });
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        if (exists $files->{$read->{name}}) {
+            my $file = $files->{$read->{name}};
+            
+            if ($file->{read} and defined (my $fh = IO::File->new($file->{name}))) {
+                my ($tell, $content);
+                $fh->seek(0, SEEK_END);
+                $tell = $fh->tell;
+                $fh->seek(0, SEEK_SET);
+                if ($fh->read($content, $tell) == $tell) {
+                    if (exists $result->{file}) {
+                        unless (ref($result->{file}) eq 'ARRAY') {
+                            $result->{file} = [ $result->{file} ];
                         }
-                        else {
-                            $result->{file} = {
-                                name => $file->{name},
-                                content => $content
-                            };
-                        }
+                        push(@{$result->{file}}, {
+                            name => $file->{name},
+                            content => $content
+                        });
+                    }
+                    else {
+                        $result->{file} = {
+                            name => $file->{name},
+                            content => $content
+                        };
                     }
                 }
             }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'File "'.$read->{name}.'" not found in configuration files'
-                ));
-                return;
-            }
+        }
+        else {
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'File "'.$read->{name}.'" not found in configuration files'
+            ));
+            return;
         }
     }
     $self->Successful($cb, $result);
@@ -388,54 +386,52 @@ sub UpdateConfig {
     my $files = $self->_ScanConfig;
     my $result = {};
 
-    if (exists $q->{file}) {
-        foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
-            if (exists $files->{$read->{name}}) {
-                my $file = $files->{$read->{name}};
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        if (exists $files->{$read->{name}}) {
+            my $file = $files->{$read->{name}};
 
-                if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
-                    print $tmp $read->{content};
-                    $tmp->flush;
-                    $tmp->close;
-                    
-                    my $fh = IO::File->new;
-                    if ($fh->open($tmp->filename)) {
-                        my ($tell, $content);
-                        $fh->seek(0, SEEK_END);
-                        $tell = $fh->tell;
-                        $fh->seek(0, SEEK_SET);
-                        unless ($fh->read($content, $tell) == $tell) {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Failed to write "'.$read->{name}.'" to temporary file'
-                            ));
-                            return;
-                        }
-                        unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
-                            ));
-                            return;
-                        }
-                        unless (rename($tmp->filename, $file->{name}))
-                        {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Failed to rename "'.$read->{name}.'"'
-                            ));
-                            return;
-                        }
+            if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
+                print $tmp $read->{content};
+                $tmp->flush;
+                $tmp->close;
+                
+                my $fh = IO::File->new;
+                if ($fh->open($tmp->filename)) {
+                    my ($tell, $content);
+                    $fh->seek(0, SEEK_END);
+                    $tell = $fh->tell;
+                    $fh->seek(0, SEEK_SET);
+                    unless ($fh->read($content, $tell) == $tell) {
+                        $self->Error($cb, Lim::Error->new(
+                            code => 500,
+                            message => 'Failed to write "'.$read->{name}.'" to temporary file'
+                        ));
+                        return;
+                    }
+                    unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
+                        $self->Error($cb, Lim::Error->new(
+                            code => 500,
+                            message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
+                        ));
+                        return;
+                    }
+                    unless (rename($tmp->filename, $file->{name}))
+                    {
+                        $self->Error($cb, Lim::Error->new(
+                            code => 500,
+                            message => 'Failed to rename "'.$read->{name}.'"'
+                        ));
+                        return;
                     }
                 }
             }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'File "'.$read->{name}.'" not found in configuration files'
-                ));
-                return;
-            }
+        }
+        else {
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'File "'.$read->{name}.'" not found in configuration files'
+            ));
+            return;
         }
     }
     $self->Successful($cb);
