@@ -822,9 +822,67 @@ sub ReadEnforcerZoneList {
 =cut
 
 sub DeleteEnforcerZone {
-    my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+    if (scalar @zones) {
+        foreach (@zones) {
+            if (exists $_->{all} and $_->{all}) {
+                weaken($self);
+                my ($stdout, $stderr);
+                # TODO reset timer on stdout output
+                Lim::Util::run_cmd
+                    [ 'ods-ksmutil', 'zone', 'delete', '--all' ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to delete all zones');
+                            return;
+                        }
+                        $self->Successful($cb);
+                    };
+                return;
+            }
+        }
+        
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            if (my $zone = shift(@zones)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'zone', 'delete',
+                        '--zone', $zone->{name},
+                        (exists $zone->{no_xml} and $zone->{no_xml} ? '--no-xml' : ())
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 10,
+                    cb => sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to delete zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
+        $cmd_cb->();
+        return;
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1

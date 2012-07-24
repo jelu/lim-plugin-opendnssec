@@ -479,6 +479,29 @@ sub zone {
         });
         return;
     }
+    elsif ($args->[0] eq 'delete' and scalar @$args == 2) {
+        my (undef, $zone) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->DeleteEnforcerZone({
+            zone => {
+                name => $zone,
+                no_xml => $xml ? 0 : 1
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('Zone ', $zone, ' deleted');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 

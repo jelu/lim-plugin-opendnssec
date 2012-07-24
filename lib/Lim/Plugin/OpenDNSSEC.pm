@@ -157,9 +157,9 @@ sub Calls {
             in => {
                 zone => {
                     '' => 'required',
-                    all => 'bool',
+                    all => 'bool optional',
                     name => 'string',
-                    no_xml => 'bool'
+                    no_xml => 'bool optional'
                 },
             }
         },
@@ -328,7 +328,8 @@ sub Commands {
         },
         zone => {
             add => 1,
-            list => 1
+            list => 1,
+            delete => 1
         }
     };
 }
