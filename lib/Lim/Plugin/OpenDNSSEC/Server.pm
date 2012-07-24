@@ -482,6 +482,9 @@ sub UpdateControlStart {
         if (scalar @programs) {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (my $program = shift(@programs)) {
                     Lim::Util::run_cmd
                         [ 'ods-control', $program, 'start' ],
@@ -490,6 +493,9 @@ sub UpdateControlStart {
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
+                            unless (defined $self) {
+                                return;
+                            }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
                                 return;
@@ -514,6 +520,9 @@ sub UpdateControlStart {
             '2>', '/dev/null',
             timeout => 30,
             cb => sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (shift->recv) {
                     $self->Error($cb, 'Unable to start OpenDNSSEC');
                     return;
@@ -560,6 +569,9 @@ sub UpdateControlStop {
         if (scalar @programs) {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (my $program = shift(@programs)) {
                     Lim::Util::run_cmd
                         [ 'ods-control', $program, 'stop' ],
@@ -568,6 +580,9 @@ sub UpdateControlStop {
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
+                            unless (defined $self) {
+                                return;
+                            }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
                                 return;
@@ -592,6 +607,9 @@ sub UpdateControlStop {
             '2>', '/dev/null',
             timeout => 30,
             cb => sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (shift->recv) {
                     $self->Error($cb, 'Unable to stop OpenDNSSEC');
                     return;
@@ -626,6 +644,9 @@ sub CreateEnforcerSetup {
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
+            unless (defined $self) {
+                return;
+            }
             if (shift->recv) {
                 $self->Error($cb, 'Unable to setup OpenDNSSEC');
                 return;
@@ -671,6 +692,9 @@ sub UpdateEnforcerUpdate {
         if (scalar @sections) {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (my $section = shift(@sections)) {
                     my ($stdout, $stderr);
                     Lim::Util::run_cmd
@@ -680,6 +704,9 @@ sub UpdateEnforcerUpdate {
                         '2>', \$stderr,
                         timeout => 30,
                         cb => sub {
+                            unless (defined $self) {
+                                return;
+                            }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to update Enforcer configuration section '.$section);
                                 return;
@@ -705,6 +732,9 @@ sub UpdateEnforcerUpdate {
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
+                unless (defined $self) {
+                    return;
+                }
                 if (shift->recv) {
                     $self->Error($cb, 'Unable to update all Enforcer configuration sections');
                     return;
@@ -732,6 +762,9 @@ sub CreateEnforcerZone {
     if (scalar @zones) {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
             if (my $zone = shift(@zones)) {
                 my ($stdout, $stderr);
                 Lim::Util::run_cmd
@@ -749,6 +782,9 @@ sub CreateEnforcerZone {
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create zone ', $zone->{name});
                             return;
@@ -801,6 +837,9 @@ sub ReadEnforcerZoneList {
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
+            unless (defined $self) {
+                return;
+            }
             if (shift->recv) {
                 $self->Error($cb, 'Unable to get Enforcer zone list');
                 return;
@@ -843,6 +882,9 @@ sub DeleteEnforcerZone {
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to delete all zones');
                             return;
@@ -855,6 +897,9 @@ sub DeleteEnforcerZone {
         
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
             if (my $zone = shift(@zones)) {
                 my ($stdout, $stderr);
                 Lim::Util::run_cmd
@@ -868,6 +913,9 @@ sub DeleteEnforcerZone {
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to delete zone ', $zone->{name});
                             return;

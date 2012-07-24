@@ -33,26 +33,31 @@ our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 sub version {
     my ($self) = @_;
-    my $softhsm = Lim::Plugin::OpenDNSSEC->Client;
+    my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
     
     weaken($self);
-    $softhsm->ReadVersion(sub {
-		my ($call, $response) = @_;
-		
-		if ($call->Successful) {
-		    $self->cli->println('OpenDNSSEC plugin version ', $response->{version});
-		    if (exists $response->{program}) {
-		        $self->cli->println('OpenDNSSEC programs:');
-		        foreach my $program (ref($response->{program}) eq 'ARRAY' ? @{$response->{program}} : $response->{program}) {
-		            $self->cli->println('    ', $program->{name}, ' version ', $program->{version});
-		        }
-		    }
-			$self->Successful;
-		}
-		else {
-			$self->Error($call->Error);
-		}
-		undef($softhsm);
+    $opendnssec->ReadVersion(sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($opendnssec);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('OpenDNSSEC plugin version ', $response->{version});
+            if (exists $response->{program}) {
+                $self->cli->println('OpenDNSSEC programs:');
+                foreach my $program (ref($response->{program}) eq 'ARRAY' ? @{$response->{program}} : $response->{program}) {
+                    $self->cli->println('    ', $program->{name}, ' version ', $program->{version});
+                }
+            }
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($opendnssec);
     });
 }
 
@@ -67,6 +72,11 @@ sub configs {
     weaken($self);
     $opendnssec->ReadConfigs(sub {
         my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($opendnssec);
+            return;
+        }
         
         if ($call->Successful) {
             $self->cli->println('OpenDNSSEC config files found:');
@@ -112,6 +122,11 @@ sub config {
             }, sub {
                 my ($call, $response) = @_;
                 
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
                 if ($call->Successful) {
                     if (exists $response->{file}) {
                         foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
@@ -145,6 +160,11 @@ sub config {
             }, sub {
                 my ($call, $response) = @_;
                 
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
                 if ($call->Successful) {
                     my $w; $w = AnyEvent->timer(
                         after => 0,
@@ -158,6 +178,11 @@ sub config {
                                     }
                                 }, sub {
                                     my ($call, $response) = @_;
+                                    
+                                    unless (defined $self) {
+                                        undef($opendnssec);
+                                        return;
+                                    }
                                     
                                     if ($call->Successful) {
                                         $self->cli->println('Config updated');
@@ -206,6 +231,11 @@ sub start {
         $opendnssec->UpdateControlStart(sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC started');
                 $self->Successful;
@@ -227,6 +257,11 @@ sub start {
         }, sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Enforcer started');
                 $self->Successful;
@@ -247,6 +282,11 @@ sub start {
             }
         }, sub {
             my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
             
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Signer started');
@@ -281,6 +321,11 @@ sub stop {
         $opendnssec->UpdateControlStop(sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC stopped');
                 $self->Successful;
@@ -302,6 +347,11 @@ sub stop {
         }, sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Enforcer stopped');
                 $self->Successful;
@@ -322,6 +372,11 @@ sub stop {
             }
         }, sub {
             my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
             
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Signer stopped');
@@ -348,6 +403,11 @@ sub setup {
     weaken($self);
     $opendnssec->CreateEnforcerSetup(sub {
         my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($opendnssec);
+            return;
+        }
         
         if ($call->Successful) {
             $self->cli->println('OpenDNSSEC setup successful');
@@ -379,6 +439,11 @@ sub update {
         $opendnssec->UpdateEnforcerUpdate(sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Enforcer configuration updated');
                 $self->Successful;
@@ -399,6 +464,11 @@ sub update {
             }
         }, sub {
             my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
             
             if ($call->Successful) {
                 $self->cli->println('OpenDNSSEC Enforcer configuration "', $args->[0], '" updated');
@@ -446,6 +516,11 @@ sub zone {
         }, sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('Zone ', $zone, ' added');
                 $self->Successful;
@@ -463,13 +538,18 @@ sub zone {
         $opendnssec->ReadEnforcerZoneList(sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
             if ($call->Successful) {
-    		    if (exists $response->{zone}) {
-    		        $self->cli->println('OpenDNSSEC Enforcer Zone List:');
-    		        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
-    		            $self->cli->println($zone->{name}, ' (policy ', $zone->{policy}, ')');
-    		        }
-    		    }
+                if (exists $response->{zone}) {
+                    $self->cli->println('OpenDNSSEC Enforcer Zone List:');
+                    foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+                        $self->cli->println($zone->{name}, ' (policy ', $zone->{policy}, ')');
+                    }
+                }
                 $self->Successful;
             }
             else {
@@ -490,6 +570,11 @@ sub zone {
             }
         }, sub {
             my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
             
             if ($call->Successful) {
                 $self->cli->println('Zone ', $zone, ' deleted');
