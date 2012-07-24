@@ -229,25 +229,85 @@ sub Calls {
             }
         },
         ReadEnforcerKeyExport => {
-            
+            in => {
+                zone => {
+                    name => 'string',
+                    keystate => 'string optional',
+                    keytype => 'string optional',
+                    ds => 'bool optional'
+                }
+            }
         },
         CreateEnforcerKeyImport => {
-            
+            in => {
+                zone => {
+                    '' => 'required',
+                    name => 'string',
+                    key => {
+                        '' => 'required',
+                        cka_id => 'string',
+                        repository => 'string',
+                        bits => 'integer',
+                        algorithm => 'integer',
+                        keystate => 'string',
+                        keytype => 'string',
+                        time => 'string',
+                        retire => 'string optional'
+                    }
+                }
+            }
         },
         UpdateEnforcerKeyRollover => {
-            
+            in => {
+                zone => {
+                    name => 'string',
+                    keytype => 'string'
+                },
+                policy => {
+                    name => 'string',
+                    keytype => 'string'
+                }
+            }
         },
         DeleteEnforcerKeyPurge => {
-            
+            in => {
+                zone => {
+                    name => 'string'
+                },
+                policy => {
+                    name => 'string'
+                }
+            }
         },
         CreateEnforcerKeyGenerate => {
-            
+            in => {
+                policy => {
+                    '' => 'required',
+                    name => 'string',
+                    interval => 'string'
+                }
+            }
         },
         UpdateEnforcerKeyKskRetire => {
-            
+            in => {
+                zone => {
+                    '' => 'required',
+                    name => 'string',
+                    cka_id => 'string optional',
+                    keytag => 'string optional'
+                }
+            }
         },
         UpdateEnforcerKeyDsSeen => {
-            
+            in => {
+                zone => {
+                    '' => 'required',
+                    name => 'string',
+                    cka_id => 'string optional',
+                    keytag => 'string optional',
+                    no_retire => 'bool optional'
+                }
+            }
         },
         #
         # Calls for ods-ksmutil/ods-enforcer backup *
