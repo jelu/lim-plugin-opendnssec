@@ -683,6 +683,121 @@ sub policy {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub key {
+    my ($self, $cmd) = @_;
+    my $verbose = 0;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'verbose' => \$verbose
+    );
+
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @zones;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@zones, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadEnforcerKeyList({
+                verbose => $verbose ? 1 : 0,
+                zone => \@zones
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{zone}) {
+                        $self->cli->println(join("\t", 'Zone', 'Keytype', 'State', 'Next Transaction', ($verbose ? ('CKA_ID', 'Repository', 'Keytag') : ())));
+                        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+                            foreach my $key (ref($zone->{key}) eq 'ARRAY' ? @{$zone->{key}} : $zone->{key}) {
+                                $self->cli->println(join("\t",
+                                    $zone->{name},
+                                    $key->{type},
+                                    $key->{state},
+                                    $key->{next_transaction},
+                                    ($verbose ? (
+                                        $key->{cka_id},
+                                        $key->{repository},
+                                        $key->{keytag}
+                                    ) : ())
+                                ));
+                            }
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadEnforcerKeyList({
+                verbose => $verbose ? 1 : 0
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{zone}) {
+                        $self->cli->println(join("\t", 'Zone', 'Keytype', 'State', 'Next Transaction', ($verbose ? ('CKA_ID', 'Repository', 'Keytag') : ())));
+                        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+                            foreach my $key (ref($zone->{key}) eq 'ARRAY' ? @{$zone->{key}} : $zone->{key}) {
+                                $self->cli->println(join("\t",
+                                    $zone->{name},
+                                    $key->{type},
+                                    $key->{state},
+                                    $key->{next_transaction},
+                                    ($verbose ? (
+                                        $key->{cka_id},
+                                        $key->{repository},
+                                        $key->{keytag}
+                                    ) : ())
+                                ));
+                            }
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

@@ -207,7 +207,26 @@ sub Calls {
         # Calls for ods-ksmutil/ods-enforcer key *
         #
         ReadEnforcerKeyList => {
-            
+            in => {
+                verbose => 'bool optional',
+                zone => {
+                    name => 'string'
+                }
+            },
+            out => {
+                zone => {
+                    name => 'string',
+                    key => {
+                        '' => 'required',
+                        type => 'string',
+                        state => 'string',
+                        next_transaction => 'string',
+                        cka_id => 'string optional',
+                        repository => 'string optional',
+                        keytag => 'string optional'
+                    }
+                }
+            }
         },
         ReadEnforcerKeyExport => {
             
@@ -335,6 +354,9 @@ sub Commands {
             list => 1
         },
         policy => {
+            list => 1
+        },
+        key => {
             list => 1
         }
     };

@@ -1088,9 +1088,145 @@ sub DeleteEnforcerPolicyPurge {
 =cut
 
 sub ReadEnforcerKeyList {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        my %zone;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($data, $stderr);
+                my $skip = 2;
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'list',
+                        '--zone', $zone->{name},
+                        (exists $q->{verbose} and $q->{verbose} ? '--verbose' : ())
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($skip) {
+                                    $skip--;
+                                    next;
+                                }
+                                
+                                if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+(?:\s\S+)*)\s*(?:(\S+)\s+(\S+)\s+(\S+)){0,1}$/o) {
+                                    unless (exists $zone{$1}) {
+                                        $zone{$1} = {
+                                            name => $1,
+                                            key => []
+                                        };
+                                    }
+                                    push(@{$zone{$1}->{key}}, {
+                                        type => $2,
+                                        state => $3,
+                                        next_transaction => $4,
+                                        (defined $5 ? (cka_id => $5) : ()),
+                                        (defined $6 ? (repository => $6) : ()),
+                                        (defined $7 ? (keytag => $7) : ())
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get Enforcer key list for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar %zone) {
+                    $self->Successful($cb, { zone => [ values %zone ] });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($data, $stderr, %zone);
+        my $skip = 2;
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'key', 'list',
+                (exists $q->{verbose} and $q->{verbose} ? '--verbose' : ())
+            ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $data .= $_[0];
+                    
+                    while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                        my $line = $1;
+                        
+                        if ($skip) {
+                            $skip--;
+                            next;
+                        }
+                        
+                        if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+(?:\s\S+)*)\s*(?:(\S+)\s+(\S+)\s+(\S+)){0,1}$/o) {
+                            unless (exists $zone{$1}) {
+                                $zone{$1} = {
+                                    name => $1,
+                                    key => []
+                                };
+                            }
+                            push(@{$zone{$1}->{key}}, {
+                                type => $2,
+                                state => $3,
+                                next_transaction => $4,
+                                (defined $5 ? (cka_id => $5) : ()),
+                                (defined $6 ? (repository => $6) : ()),
+                                (defined $7 ? (keytag => $7) : ())
+                            });
+                        }
+                    }
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to get Enforcer key list');
+                    return;
+                }
+                elsif (scalar %zone) {
+                    $self->Successful($cb, { zone => [ values %zone ] });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+    }
 }
 
 =head2 function1
