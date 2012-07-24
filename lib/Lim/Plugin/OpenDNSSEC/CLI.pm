@@ -590,6 +590,53 @@ sub zone {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub repository {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->ReadEnforcerRepositoryList(sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{repository}) {
+                    $self->cli->println(join("\t", 'Name', 'Capacity', 'Require Backup'));
+                    foreach my $slot (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
+                        $self->cli->println(join("\t",
+                            $slot->{name},
+                            $slot->{capacity},
+                            $slot->{require_backup} ? 'Yes' : 'No'
+                        ));
+                    }
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

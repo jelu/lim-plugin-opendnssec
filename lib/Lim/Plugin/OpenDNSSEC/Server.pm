@@ -939,8 +939,53 @@ sub DeleteEnforcerZone {
 
 sub ReadEnforcerRepositoryList {
     my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    weaken($self);
+    my ($data, $stderr, @repositories);
+    Lim::Util::run_cmd [ 'ods-ksmutil', 'repository', 'list' ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    if ($line =~ /^(\S+)\s+(\d+)\s+((?:Yes|No))$/o) {
+                        push(@repositories, {
+                            name => $1,
+                            capacity => $2,
+                            require_backup => $3 eq 'Yes' ? 1 : 0
+                        });
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get Enforcer repository list');
+                return;
+            }
+            if (scalar @repositories == 1) {
+                $self->Successful($cb, { repository => $repositories[0] });
+            }
+            elsif (scalar @repositories) {
+                $self->Successful($cb, { repository => \@repositories });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head2 function1

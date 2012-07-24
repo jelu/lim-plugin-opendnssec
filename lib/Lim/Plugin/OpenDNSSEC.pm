@@ -330,6 +330,9 @@ sub Commands {
             add => 1,
             list => 1,
             delete => 1
+        },
+        repository => {
+            list => 1
         }
     };
 }
