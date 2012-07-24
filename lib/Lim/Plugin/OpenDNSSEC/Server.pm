@@ -901,6 +901,13 @@ sub DeleteEnforcerZone {
                 return;
             }
             if (my $zone = shift(@zones)) {
+                while (defined $zone and !exists $zone->{name}) {
+                    $zone = shift(@zones);
+                }
+                unless (defined $zone) {
+                    $self->Successful($cb);
+                    return;
+                }
                 my ($stdout, $stderr);
                 Lim::Util::run_cmd
                     [

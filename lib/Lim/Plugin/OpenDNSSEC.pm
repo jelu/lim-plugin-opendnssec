@@ -158,7 +158,7 @@ sub Calls {
                 zone => {
                     '' => 'required',
                     all => 'bool optional',
-                    name => 'string',
+                    name => 'string optional',
                     no_xml => 'bool optional'
                 },
             }
