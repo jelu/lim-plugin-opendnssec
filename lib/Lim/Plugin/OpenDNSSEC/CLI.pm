@@ -617,11 +617,57 @@ sub repository {
             if ($call->Successful) {
                 if (exists $response->{repository}) {
                     $self->cli->println(join("\t", 'Name', 'Capacity', 'Require Backup'));
-                    foreach my $slot (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
+                    foreach my $repository (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
                         $self->cli->println(join("\t",
-                            $slot->{name},
-                            $slot->{capacity},
-                            $slot->{require_backup} ? 'Yes' : 'No'
+                            $repository->{name},
+                            $repository->{capacity},
+                            $repository->{require_backup} ? 'Yes' : 'No'
+                        ));
+                    }
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    $self->Error;
+}
+
+=head2 function1
+
+=cut
+
+sub policy {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+
+    unless ($getopt) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->ReadEnforcerPolicyList(sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{policy}) {
+                    $self->cli->println(join("\t", 'Name', 'Description'));
+                    foreach my $policy (ref($response->{policy}) eq 'ARRAY' ? @{$response->{policy}} : $response->{policy}) {
+                        $self->cli->println(join("\t",
+                            $policy->{name},
+                            $policy->{description}
                         ));
                     }
                 }

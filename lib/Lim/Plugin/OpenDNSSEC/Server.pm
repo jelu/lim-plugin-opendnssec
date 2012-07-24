@@ -947,6 +947,7 @@ sub ReadEnforcerRepositoryList {
     
     weaken($self);
     my ($data, $stderr, @repositories);
+    my $skip = 2;
     Lim::Util::run_cmd [ 'ods-ksmutil', 'repository', 'list' ],
         '<', '/dev/null',
         '>', sub {
@@ -956,6 +957,12 @@ sub ReadEnforcerRepositoryList {
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
                     
+                    if ($skip) {
+                        $skip--;
+                        next;
+                    }
+                    
+                    # TODO spaces in name?
                     if ($line =~ /^(\S+)\s+(\d+)\s+((?:Yes|No))$/o) {
                         push(@repositories, {
                             name => $1,
@@ -994,8 +1001,59 @@ sub ReadEnforcerRepositoryList {
 
 sub ReadEnforcerPolicyList {
     my ($self, $cb) = @_;
-
-    $self->Error($cb, 'Not Implemented');
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    weaken($self);
+    my ($data, $stderr, @policies);
+    my $skip = 2;
+    Lim::Util::run_cmd [ 'ods-ksmutil', 'policy', 'list' ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    if ($skip) {
+                        $skip--;
+                        next;
+                    }
+                    
+                    # TODO spaces in name?
+                    if ($line =~ /^(\S+)\s+(.+)$/o) {
+                        push(@policies, {
+                            name => $1,
+                            description => $2
+                        });
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get Enforcer policy list');
+                return;
+            }
+            if (scalar @policies == 1) {
+                $self->Successful($cb, { policy => $policies[0] });
+            }
+            elsif (scalar @policies) {
+                $self->Successful($cb, { policy => \@policies });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head2 function1

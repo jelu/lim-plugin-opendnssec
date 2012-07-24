@@ -333,6 +333,9 @@ sub Commands {
         },
         repository => {
             list => 1
+        },
+        policy => {
+            list => 1
         }
     };
 }
