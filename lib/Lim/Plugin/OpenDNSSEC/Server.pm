@@ -639,7 +639,7 @@ sub CreateEnforcerSetup {
 
     weaken($self);
     my ($stdout, $stderr);
-    my $stdin = "Y\r";
+    my $stdin = "Y\015";
     Lim::Util::run_cmd [ 'ods-ksmutil', 'setup' ],
         '<', \$stdin,
         '>', \$stdout,
