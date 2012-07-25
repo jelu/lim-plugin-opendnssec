@@ -1589,6 +1589,49 @@ sub database {
     }
 }
 
+=head2 function1
+
+=cut
+
+sub zonelist {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args == 1) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'export') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->ReadEnforcerZonelistExport(sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{zonelist}) {
+                    $self->cli->println('Zonelist:');
+                    $self->cli->println($response->{zonelist});
+                }
+                else {
+                    $self->cli->println('No zonelist received');
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

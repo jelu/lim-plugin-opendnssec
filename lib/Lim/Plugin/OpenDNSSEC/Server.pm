@@ -2393,7 +2393,30 @@ sub CreateEnforcerDatabaseBackup {
 sub ReadEnforcerZonelistExport {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    # TODO is there a way to send the database as base64 incrementaly to avoid hogning memory?
+    
+    weaken($self);
+    my ($stdout, $stderr);
+    Lim::Util::run_cmd [ 'ods-ksmutil', 'zonelist', 'export' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to export zonelist');
+                return;
+            }
+            $self->Successful($cb, { zonelist => $stdout });
+        };
 }
 
 =head2 function1

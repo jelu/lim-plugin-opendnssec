@@ -409,7 +409,9 @@ sub Calls {
         # Call for ods-ksmutil/ods-enforcer zonelist export
         #
         ReadEnforcerZonelistExport => {
-            
+            out => {
+                zonelist => 'string'
+            }
         },
         #
         # Calls for ods-signer *
@@ -513,6 +515,9 @@ sub Commands {
         },
         database => {
             backup => 1
+        },
+        zonelist => {
+            export => 1
         }
     };
 }
