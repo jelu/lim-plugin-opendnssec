@@ -1432,14 +1432,15 @@ sub UpdateEnforcerKeyRollover {
                     };
             }
             elsif (my $policy = shift(@policies)) {
-                my ($stdout, $stderr);
+                my ($stdout, $stderr, $stdin);
+                $stdin = "Y\015";
                 Lim::Util::run_cmd
                     [
                         'ods-ksmutil', 'key', 'rollover',
                         '--policy', $policy->{name},
                         (exists $policy->{keytype} ? ('--keytype' => $policy->{keytype}) : ())
                     ],
-                    '<', '/dev/null',
+                    '<', \$stdin,
                     '>', \$stdout,
                     '2>', \$stderr,
                     timeout => 30,
