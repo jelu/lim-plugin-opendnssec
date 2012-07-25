@@ -1468,9 +1468,119 @@ sub UpdateEnforcerKeyRollover {
 =cut
 
 sub DeleteEnforcerKeyPurge {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @zones;
+    if (exists $q->{zone}) {
+        @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+    }
+    
+    my @policies;
+    if (exists $q->{policy}) {
+        @policies = ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : ($q->{policy});
+    }
+
+    # TODO test parsing of output
+
+    if (scalar @zones or scalar @policies) {
+        my @keys;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($data, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'purge',
+                        '--zone', $zone->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($line =~ /^Key\s+remove\s+successful:\s+(\S+)$/o) {
+                                    push(@keys, {
+                                        cka_id => $1
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to issue Enforcer key rollover for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            elsif (my $policy = shift(@policies)) {
+                my ($data, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'purge',
+                        '--policy', $policy->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($line =~ /^Key\s+remove\s+successful:\s+(\S+)$/o) {
+                                    push(@keys, {
+                                        cka_id => $1
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to issue Enforcer key rollover for policy ', $policy->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar @keys == 1) {
+                    $self->Successful($cb, { key => $keys[0] });
+                }
+                elsif (scalar @keys) {
+                    $self->Successful($cb, { key => \@keys });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
 }
 
 =head2 function1

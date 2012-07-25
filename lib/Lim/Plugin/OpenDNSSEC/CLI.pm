@@ -930,6 +930,55 @@ sub key {
             return;
         }
     }
+    elsif ($args->[0] eq 'purge' and scalar @$args >= 2 and ($args->[1] eq 'zone' or $args->[1] eq 'policy')) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 2) {
+            my @names;
+            my $skip = 2;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@names, {
+                    name => $_,
+                    (defined $keytype ? (keytype => $keytype) : ()),
+                });
+            }
+
+            weaken($self);
+            $opendnssec->DeleteEnforcerKeyPurge({
+                $args->[1] eq 'zone' ? (zone => \@names) : (policy => \@names)
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{key}) {
+                        $self->cli->println('Keys (CKA_ID) purged:');
+                        foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                            $self->cli->println($key->{cka_id});
+                        }
+                    }
+                    else {
+                        $self->cli->println('No keys purged');
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
     
     $self->Error;
 }

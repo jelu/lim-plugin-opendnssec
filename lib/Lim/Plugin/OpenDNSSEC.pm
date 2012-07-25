@@ -289,6 +289,11 @@ sub Calls {
                 policy => {
                     name => 'string'
                 }
+            },
+            out => {
+                key => {
+                    cka_id => 'string'
+                }
             }
         },
         CreateEnforcerKeyGenerate => {
@@ -432,6 +437,10 @@ sub Commands {
             list => 1,
             export => 1,
             rollover => {
+                zone => 1,
+                policy => 1
+            },
+            purge => {
                 zone => 1,
                 policy => 1
             }
