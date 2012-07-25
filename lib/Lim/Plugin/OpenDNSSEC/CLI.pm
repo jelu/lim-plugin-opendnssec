@@ -1452,6 +1452,7 @@ sub backup {
             return;
         }
     }
+    $self->Error;
 }
 
 =head2 function1
@@ -1550,6 +1551,7 @@ sub rollover {
             return;
         }
     }
+    $self->Error;
 }
 
 =head2 function1
@@ -1587,6 +1589,7 @@ sub database {
         });
         return;
     }
+    $self->Error;
 }
 
 =head2 function1
@@ -1630,6 +1633,7 @@ sub zonelist {
         });
         return;
     }
+    $self->Error;
 }
 
 =head2 function1
@@ -1958,6 +1962,7 @@ sub signer {
         });
         return;
     }
+    $self->Error;
 }
 
 =head1 AUTHOR
