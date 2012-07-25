@@ -1729,9 +1729,54 @@ sub UpdateEnforcerKeyKskRetire {
 =cut
 
 sub UpdateEnforcerKeyDsSeen {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            return;
+        }
+        if (my $zone = shift(@zones)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'ods-ksmutil', 'key', 'ds-seen',
+                    '--zone', $zone->{name},
+                    (exists $zone->{cka_id} ? ('--cka_id', $zone->{cka_id}) : ()),
+                    (exists $zone->{keytag} ? ('--keytag',  $zone->{keytag}) : ()),
+                    (exists $zone->{no_retire} and $zone->{no_retire} ? ('--no-retire') : ())
+                ],
+                '<', '/dev/null',
+                '>', \$stdout,
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to set key as ds seen for zone ', $zone->{name},
+                            (exists $zone->{cka_id} ? ' cka_id '.$zone->{cka_id} : ''),
+                            (exists $zone->{keytag} ? ' keytag '.$zone->{keytag} : '')
+                            );
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

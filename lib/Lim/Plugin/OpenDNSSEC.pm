@@ -456,6 +456,9 @@ sub Commands {
             generate => 1,
             ksk => {
                 retire => 1
+            },
+            ds => {
+                seen => 1
             }
         }
     };
