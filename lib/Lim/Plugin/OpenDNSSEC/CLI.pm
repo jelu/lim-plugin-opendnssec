@@ -1090,6 +1090,370 @@ sub key {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub backup {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args >= 1) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'prepare') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupPrepare({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup prepared');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupPrepare(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup prepared');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    elsif ($args->[0] eq 'commit') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupCommit({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup committed');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupCommit(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup committed');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    elsif ($args->[0] eq 'rollback') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupRollback({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup rollbacked');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupRollback(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup rollbacked');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    elsif ($args->[0] eq 'done') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupDone({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup done');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->UpdateEnforcerBackupDone(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Backup done');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    elsif ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadEnforcerBackupList({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{repository}) {
+                        $self->cli->println(join("\t", 'Repository', 'Last Backup', 'Unbacked Up Keys', 'Prepared Keys'));
+                        foreach my $repository (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
+                            my $backup = 'NONE';
+                            
+                            if (exists $repository->{backup}) {
+                                if (ref($repository->{backup}) eq 'ARRAY') {
+                                    foreach (sort {$b->{date} cmp $a->{date}} @{$repository->{backup}}) {
+                                        $backup = $_;
+                                        last;
+                                    }
+                                }
+                                else {
+                                    $backup = $repository->{backup};
+                                }
+                            }
+                            
+                            $self->cli->println(join("\t",
+                                $repository->{name},
+                                $backup,
+                                exists $repository->{unbacked_up_keys} and $repository->{unbacked_up_keys} ? 'Yes' : 'No',
+                                exists $repository->{prepared_keys} and $repository->{prepared_keys} ? 'Yes' : 'No'
+                                ));
+                        }
+                    }
+                    else {
+                        $self->cli->println('There are no backups');
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadEnforcerBackupList(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{repository}) {
+                        $self->cli->println(join("\t", 'Repository', 'Last Backup', 'Unbacked Up Keys', 'Prepared Keys'));
+                        foreach my $repository (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
+                            my $backup = 'NONE';
+                            
+                            if (exists $repository->{backup}) {
+                                if (ref($repository->{backup}) eq 'ARRAY') {
+                                    foreach (sort {$b->{date} cmp $a->{date}} @{$repository->{backup}}) {
+                                        $backup = $_->{date};
+                                        last;
+                                    }
+                                }
+                                else {
+                                    $backup = $repository->{backup}->{date};
+                                }
+                            }
+                            
+                            $self->cli->println(join("\t",
+                                $repository->{name},
+                                $backup,
+                                ((exists $repository->{unbacked_up_keys} and $repository->{unbacked_up_keys}) ? 'Yes' : 'No'),
+                                ((exists $repository->{prepared_keys} and $repository->{prepared_keys}) ? 'Yes' : 'No')
+                                ));
+                        }
+                    }
+                    else {
+                        $self->cli->println('There are no backups');
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

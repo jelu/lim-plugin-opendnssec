@@ -1784,9 +1784,71 @@ sub UpdateEnforcerKeyDsSeen {
 =cut
 
 sub UpdateEnforcerBackupPrepare {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $repository = shift(@repositories)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'backup', 'prepare',
+                        '--repository', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to prepare backup of repository ', $repository->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'backup', 'prepare'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to prepare backup');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -1794,9 +1856,71 @@ sub UpdateEnforcerBackupPrepare {
 =cut
 
 sub UpdateEnforcerBackupCommit {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $repository = shift(@repositories)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'backup', 'commit',
+                        '--repository', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to commit backup of repository ', $repository->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'backup', 'commit'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to commit backup');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -1804,9 +1928,71 @@ sub UpdateEnforcerBackupCommit {
 =cut
 
 sub UpdateEnforcerBackupRollback {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $repository = shift(@repositories)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'backup', 'rollback',
+                        '--repository', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to rollback backup of repository ', $repository->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'backup', 'rollback'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to rollback backup');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -1814,9 +2000,71 @@ sub UpdateEnforcerBackupRollback {
 =cut
 
 sub UpdateEnforcerBackupDone {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $repository = shift(@repositories)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'backup', 'done',
+                        '--repository', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to take backup of repository ', $repository->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'backup', 'done'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to take backup');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -1824,9 +2072,152 @@ sub UpdateEnforcerBackupDone {
 =cut
 
 sub ReadEnforcerBackupList {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @respositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        my %repository;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $repository = shift(@respositories)) {
+                my ($data, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'backup', 'list',
+                        '--repository', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($line =~ /^Repository\s+(.+)\s+has\s+unbacked\s+up\s+keys/o) {
+                                    unless (exists $repository{$1}) {
+                                        $repository{$1} = {
+                                            name => $1
+                                        };
+                                    }
+                                    $repository{$1}->{unbacked_up_keys} = 1;
+                                }
+                                elsif ($line =~ /^Repository\s+(.+)\s+has\s+keys\s+prepared/o) {
+                                    unless (exists $repository{$1}) {
+                                        $repository{$1} = {
+                                            name => $1
+                                        };
+                                    }
+                                    $repository{$1}->{prepared_keys} = 1;
+                                }
+                                elsif ($line =~ /^(\S+\s+\S+)\s+(\S+)$/o) {
+                                    unless (exists $repository{$2}) {
+                                        $repository{$2} = {
+                                            name => $2
+                                        };
+                                    }
+                                    push(@{$repository{$2}->{backup}}, {
+                                        date => $1
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get Enforcer backup list for repository ', $repository->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar %repository) {
+                    $self->Successful($cb, { repository => [ values %repository ] });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($data, $stderr, %repository);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'backup', 'list'
+            ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $data .= $_[0];
+                    
+                    while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                        my $line = $1;
+                        
+                        if ($line =~ /^Repository\s+(.+)\s+has\s+unbacked\s+up\s+keys/o) {
+                            unless (exists $repository{$1}) {
+                                $repository{$1} = {
+                                    name => $1
+                                };
+                            }
+                            $repository{$1}->{unbacked_up_keys} = 1;
+                        }
+                        elsif ($line =~ /^Repository\s+(.+)\s+has\s+keys\s+prepared/o) {
+                            unless (exists $repository{$1}) {
+                                $repository{$1} = {
+                                    name => $1
+                                };
+                            }
+                            $repository{$1}->{prepared_keys} = 1;
+                        }
+                        elsif ($line =~ /^(\S+\s+\S+)\s+(\S+)$/o) {
+                            unless (exists $repository{$2}) {
+                                $repository{$2} = {
+                                    name => $2
+                                };
+                            }
+                            push(@{$repository{$2}->{backup}}, {
+                                date => $1
+                            });
+                        }
+                    }
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to get Enforcer backup list');
+                    return;
+                }
+                elsif (scalar %repository) {
+                    $self->Successful($cb, { repository => [ values %repository ] });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+    }
 }
 
 =head2 function1

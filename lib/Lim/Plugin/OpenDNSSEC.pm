@@ -339,19 +339,49 @@ sub Calls {
         # Calls for ods-ksmutil/ods-enforcer backup *
         #
         UpdateEnforcerBackupPrepare => {
-            
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            }
         },
         UpdateEnforcerBackupCommit => {
-            
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            }
         },
         UpdateEnforcerBackupRollback => {
-            
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            }
         },
         UpdateEnforcerBackupDone => {
-            
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            }
         },
         ReadEnforcerBackupList => {
-            
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            },
+            out => {
+                repository => {
+                    name => 'string',
+                    backup => {
+                        date => 'string'
+                    },
+                    unbacked_up_keys => 'bool optional',
+                    prepared_keys => 'bool optional'
+                }
+            }
         },
         #
         # Call for ods-ksmutil/ods-enforcer rollover list
@@ -460,6 +490,13 @@ sub Commands {
             ds => {
                 seen => 1
             }
+        },
+        backup => {
+            prepare => 1,
+            commit => 1,
+            rollback => 1,
+            done => 1,
+            list => 1
         }
     };
 }
