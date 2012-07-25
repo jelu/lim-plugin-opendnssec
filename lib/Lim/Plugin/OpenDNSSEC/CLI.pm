@@ -690,8 +690,14 @@ sub policy {
 sub key {
     my ($self, $cmd) = @_;
     my $verbose = 0;
+    my $keystate;
+    my $keytype;
+    my $ds = 0;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
-        'verbose' => \$verbose
+        'verbose' => \$verbose,
+        'keystate:s' => \$keystate,
+        'keytype:s' => \$keytype,
+        'ds' => \$ds
     );
 
     unless ($getopt) {
@@ -783,6 +789,94 @@ sub key {
                                     ) : ())
                                 ));
                             }
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    elsif ($args->[0] eq 'export') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @zones;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@zones, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadEnforcerKeyExport({
+                zone => \@zones,
+                (defined $keystate ? (keystate => $keystate) : ()),
+                (defined $keytype ? (keytype => $keytype) : ()),
+                (defined $ds and $ds ? (ds => 1) : ()),
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{rr}) {
+                        $self->cli->println(join("\t", 'Name', 'TTL', 'Class', 'Type', 'RDATA'));
+                        foreach my $rr (ref($response->{rr}) eq 'ARRAY' ? @{$response->{rr}} : $response->{rr}) {
+                            $self->cli->println(join("\t",
+                                $rr->{name},
+                                $rr->{ttl},
+                                $rr->{class},
+                                $rr->{type},
+                                $rr->{rdata}
+                                ));
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadEnforcerKeyExport({
+                (defined $keystate ? (keystate => $keystate) : ()),
+                (defined $keytype ? (keytype => $keytype) : ()),
+                (defined $ds and $ds ? (ds => 1) : ()),
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{rr}) {
+                        $self->cli->println(join("\t", 'Name', 'TTL', 'Class', 'Type', 'RDATA'));
+                        foreach my $rr (ref($response->{rr}) eq 'ARRAY' ? @{$response->{rr}} : $response->{rr}) {
+                            $self->cli->println(join("\t",
+                                $rr->{name},
+                                $rr->{ttl},
+                                $rr->{class},
+                                $rr->{type},
+                                $rr->{rdata}
+                                ));
                         }
                     }
                     $self->Successful;

@@ -230,11 +230,23 @@ sub Calls {
         },
         ReadEnforcerKeyExport => {
             in => {
+                keystate => 'string optional',
+                keytype => 'string optional',
+                ds => 'bool optional',
                 zone => {
                     name => 'string',
                     keystate => 'string optional',
                     keytype => 'string optional',
                     ds => 'bool optional'
+                }
+            },
+            out => {
+                rr => {
+                    name => 'string',
+                    ttl => 'integer',
+                    class => 'string',
+                    type => 'string',
+                    rdata => 'string'
                 }
             }
         },
@@ -417,7 +429,8 @@ sub Commands {
             list => 1
         },
         key => {
-            list => 1
+            list => 1,
+            export => 1
         }
     };
 }

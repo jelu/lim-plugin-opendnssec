@@ -1234,9 +1234,133 @@ sub ReadEnforcerKeyList {
 =cut
 
 sub ReadEnforcerKeyExport {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        my @rr;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($data, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'export',
+                        '--zone', $zone->{name},
+                        (exists $zone->{keystate} ? ('--keystate' => $zone->{keystate}) : (exists $q->{keystate} and $q->{keystate} ? ('--keystate', $q->{keystate}) : ())),
+                        (exists $zone->{keytype} ? ('--keytype' => $zone->{keytype}) : (exists $q->{keytype} and $q->{keytype} ? ('--keytype', $q->{keytype}) : ())),
+                        (exists $zone->{ds} ? ('--ds' => $zone->{ds}) : (exists $q->{ds} and $q->{ds} ? ('--ds') : ()))
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                $line =~ s/;.*//o;
+                                
+                                if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
+                                    push(@rr, {
+                                        name => $1,
+                                        ttl => $2,
+                                        class => $3,
+                                        type => $4,
+                                        rdata => $5
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get Enforcer key export for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar @rr == 1) {
+                    $self->Successful($cb, { rr => $rr[0] });
+                }
+                elsif (scalar @rr) {
+                    $self->Successful($cb, { rr => \@rr });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($data, $stderr, @rr);
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'key', 'export', '--all',
+                (exists $q->{keystate} and $q->{keystate} ? ('--keystate', $q->{keystate}) : ()),
+                (exists $q->{keytype} and $q->{keytype} ? ('--keytype', $q->{keytype}) : ()),
+                (exists $q->{ds} and $q->{ds} ? ('--ds') : ())
+            ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $data .= $_[0];
+                    
+                    while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                        my $line = $1;
+                        
+                        $line =~ s/;.*//o;
+                        
+                        if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
+                            push(@rr, {
+                                name => $1,
+                                ttl => $2,
+                                class => $3,
+                                type => $4,
+                                rdata => $5
+                            });
+                        }
+                    }
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to get Enforcer key export');
+                    return;
+                }
+                elsif (scalar @rr == 1) {
+                    $self->Successful($cb, { rr => $rr[0] });
+                }
+                elsif (scalar @rr) {
+                    $self->Successful($cb, { rr => \@rr });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+    }
 }
 
 =head2 function1
