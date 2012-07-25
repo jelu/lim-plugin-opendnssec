@@ -453,7 +453,10 @@ sub Commands {
                 zone => 1,
                 policy => 1
             },
-            generate => 1
+            generate => 1,
+            ksk => {
+                retire => 1
+            }
         }
     };
 }

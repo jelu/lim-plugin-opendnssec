@@ -1666,9 +1666,61 @@ sub CreateEnforcerKeyGenerate {
 =cut
 
 sub UpdateEnforcerKeyKskRetire {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($stdout, $stderr, $stdin);
+                $stdin = "Y\015";
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'ksk-retire',
+                        '--zone', $zone->{name},
+                        (exists $zone->{cka_id} ? ('--cka_id' => $zone->{cka_id}) : ()),
+                        (exists $zone->{keytag} ? ('--keytag' => $zone->{keytag}) : ())
+                    ],
+                    '<', \$stdin,
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            my $error;
+                            if ($stdout =~ /((?:Error:|No keys in)[^,]+)/o) {
+                                $error = $1;
+                                $error =~ s/^Error:\s+//o;
+                            }
+                            $self->Error($cb, 'Unable to retire KSK keys for zone ', $zone->{name},
+                                (exists $zone->{cka_id} ? ' cka_id '.$zone->{cka_id} : ''),
+                                (exists $zone->{keytag} ? ' keytag '.$zone->{keytag} : ''),
+                                ' error: ', (defined $error ? $error : 'unknown')
+                                );
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
 }
 
 =head2 function1

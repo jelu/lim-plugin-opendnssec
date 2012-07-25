@@ -693,11 +693,15 @@ sub key {
     my $keystate;
     my $keytype;
     my $ds = 0;
+    my $cka_id;
+    my $keytag;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
         'verbose' => \$verbose,
         'keystate:s' => \$keystate,
         'keytype:s' => \$keytype,
-        'ds' => \$ds
+        'ds' => \$ds,
+        'cka_id:s' => \$cka_id,
+        'keytag:s' => \$keytag
     );
 
     unless ($getopt and scalar @$args >= 1) {
@@ -1012,6 +1016,35 @@ sub key {
                 else {
                     $self->cli->println('No keys generated');
                 }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'ksk' and scalar @$args == 3 and $args->[1] eq 'retire') {
+        my (undef, undef, $zone) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->UpdateEnforcerKeyKskRetire({
+            zone => {
+                name => $zone,
+                (defined $cka_id ? (cka_id => $cka_id) : ()),
+                (defined $keytag ? (keytag => $keytag) : ())
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                $self->cli->println('KSK retired');
                 $self->Successful;
             }
             else {
