@@ -1588,9 +1588,77 @@ sub DeleteEnforcerKeyPurge {
 =cut
 
 sub CreateEnforcerKeyGenerate {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{policy}) {
+        my @policies = ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : ($q->{policy});
+        my @keys;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $policy = shift(@policies)) {
+                my ($data, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'key', 'generate',
+                        '--policy', $policy->{name},
+                        '--interval', $policy->{interval},
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($line =~ /^Created\s+(\S+)\s+size:\s+(\d+),\s+alg:\s+(\d+)\s+with\s+id:\s+(\S+)\s+in\s+repository:\s+(.*)\s+and\s+database\.$/o) {
+                                    push(@keys, {
+                                        keytype => $1,
+                                        bits => $2,
+                                        algorithm => $3,
+                                        cka_id => $4,
+                                        repository => $5
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to generate keys for policy ', $policy->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar @keys == 1) {
+                    $self->Successful($cb, { key => $keys[0] });
+                }
+                elsif (scalar @keys) {
+                    $self->Successful($cb, { key => \@keys });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
 }
 
 =head2 function1

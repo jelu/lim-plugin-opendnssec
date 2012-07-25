@@ -303,6 +303,15 @@ sub Calls {
                     name => 'string',
                     interval => 'string'
                 }
+            },
+            out => {
+                key => {
+                    cka_id => 'string',
+                    repository => 'string',
+                    bits => 'integer',
+                    algorithm => 'integer',
+                    keytype => 'string'
+                }
             }
         },
         UpdateEnforcerKeyKskRetire => {
@@ -443,7 +452,8 @@ sub Commands {
             purge => {
                 zone => 1,
                 policy => 1
-            }
+            },
+            generate => 1
         }
     };
 }

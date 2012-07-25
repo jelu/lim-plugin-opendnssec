@@ -979,6 +979,48 @@ sub key {
             return;
         }
     }
+    elsif ($args->[0] eq 'generate' and scalar @$args == 3) {
+        my (undef, $policy, $interval) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->CreateEnforcerKeyGenerate({
+            policy => {
+                name => $policy,
+                interval => $interval
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{key}) {
+                    $self->cli->println(join("\t", 'Keytype', 'Bits', 'Algorithm', 'CKA_ID', 'Repository'));
+                    foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                        $self->cli->println(join("\t",
+                            $key->{keytype},
+                            $key->{bits},
+                            $key->{algorithm},
+                            $key->{cka_id},
+                            $key->{repository}
+                            ));
+                    }
+                }
+                else {
+                    $self->cli->println('No keys generated');
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     
     $self->Error;
 }
