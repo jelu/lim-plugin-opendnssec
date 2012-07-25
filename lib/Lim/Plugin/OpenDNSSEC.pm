@@ -404,7 +404,6 @@ sub Calls {
         # Call for ods-ksmutil/ods-enforcer database backup
         #
         CreateEnforcerDatabaseBackup => {
-            
         },
         #
         # Call for ods-ksmutil/ods-enforcer zonelist export
@@ -511,6 +510,9 @@ sub Commands {
         },
         rollover => {
             list => 1
+        },
+        database => {
+            backup => 1
         }
     };
 }
