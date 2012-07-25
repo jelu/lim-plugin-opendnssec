@@ -2225,9 +2225,132 @@ sub ReadEnforcerBackupList {
 =cut
 
 sub ReadEnforcerRolloverList {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        my @rollovers;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($data, $stderr);
+                my $skip = 2;
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'rollover', 'list',
+                        '--zone', $zone->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($skip) {
+                                    $skip--;
+                                    next;
+                                }
+                                
+                                if ($line =~ /^(\S+)\s+(\S+)\s+(\S+\s+\S+)$/o) {
+                                    push(@rollovers, {
+                                        name => $1,
+                                        keytype => $2,
+                                        rollover_expected => $3
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get Enforcer rollover list for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar @rollovers == 1) {
+                    $self->Successful($cb, { zone => $rollovers[0] });
+                }
+                elsif (scalar @rollovers) {
+                    $self->Successful($cb, { zone => \@rollovers });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($data, $stderr, @rollovers);
+        my $skip = 2;
+        Lim::Util::run_cmd
+            [
+                'ods-ksmutil', 'rollover', 'list'
+            ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $data .= $_[0];
+                    
+                    while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                        my $line = $1;
+                        
+                        if ($skip) {
+                            $skip--;
+                            next;
+                        }
+                        
+                        if ($line =~ /^(\S+)\s+(\S+)\s+(\S+\s+\S+)$/o) {
+                            push(@rollovers, {
+                                name => $1,
+                                keytype => $2,
+                                rollover_expected => $3
+                            });
+                        }
+                    }
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to get Enforcer rollover list');
+                    return;
+                }
+                elsif (scalar @rollovers == 1) {
+                    $self->Successful($cb, { zone => $rollovers[0] });
+                }
+                elsif (scalar @rollovers) {
+                    $self->Successful($cb, { zone => \@rollovers });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+    }
 }
 
 =head2 function1

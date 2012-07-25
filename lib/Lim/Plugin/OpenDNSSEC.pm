@@ -387,7 +387,18 @@ sub Calls {
         # Call for ods-ksmutil/ods-enforcer rollover list
         #
         ReadEnforcerRolloverList => {
-            
+            in => {
+                zone => {
+                    name => 'string'
+                }
+            },
+            out => {
+                zone => {
+                    name => 'string',
+                    keytype => 'string',
+                    rollover_expected => 'string'
+                }
+            }
         },
         #
         # Call for ods-ksmutil/ods-enforcer database backup
@@ -496,6 +507,9 @@ sub Commands {
             commit => 1,
             rollback => 1,
             done => 1,
+            list => 1
+        },
+        rollover => {
             list => 1
         }
     };

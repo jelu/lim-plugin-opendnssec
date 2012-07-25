@@ -1454,6 +1454,104 @@ sub backup {
     }
 }
 
+=head2 function1
+
+=cut
+
+sub rollover {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args >= 1) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @zones;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@zones, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadEnforcerRolloverList({
+                zone => \@zones
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{zone}) {
+                        $self->cli->println(join("\t", 'Zone', 'Keytype', 'Rollover Expected'));
+                        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+                            $self->cli->println(join("\t",
+                                $zone->{name},
+                                $zone->{keytype},
+                                $zone->{rollover_expected}
+                                ));
+                        }
+                    }
+                    else {
+                        $self->cli->println('There are no rollovers expected');
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadEnforcerRolloverList(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{zone}) {
+                        $self->cli->println(join("\t", 'Zone', 'Keytype', 'Rollover Expected'));
+                        foreach my $zone (ref($response->{zone}) eq 'ARRAY' ? @{$response->{zone}} : $response->{zone}) {
+                            $self->cli->println(join("\t",
+                                $zone->{name},
+                                $zone->{keytype},
+                                $zone->{rollover_expected}
+                                ));
+                        }
+                    }
+                    else {
+                        $self->cli->println('There are no rollovers expected');
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>
