@@ -700,7 +700,7 @@ sub key {
         'ds' => \$ds
     );
 
-    unless ($getopt) {
+    unless ($getopt and scalar @$args >= 1) {
         $self->Error;
         return;
     }
@@ -889,6 +889,48 @@ sub key {
             return;
         }
     }
+    elsif ($args->[0] eq 'rollover' and scalar @$args >= 2 and ($args->[1] eq 'zone' or $args->[1] eq 'policy')) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 2) {
+            my @names;
+            my $skip = 2;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@names, {
+                    name => $_,
+                    (defined $keytype ? (keytype => $keytype) : ()),
+                });
+            }
+
+            weaken($self);
+            $opendnssec->UpdateEnforcerKeyRollover({
+                $args->[1] eq 'zone' ? (zone => \@names) : (policy => \@names)
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    $self->cli->println('Rollover issued');
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    
     $self->Error;
 }
 

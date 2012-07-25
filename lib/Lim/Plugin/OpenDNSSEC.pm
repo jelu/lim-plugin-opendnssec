@@ -273,11 +273,11 @@ sub Calls {
             in => {
                 zone => {
                     name => 'string',
-                    keytype => 'string'
+                    keytype => 'string optional'
                 },
                 policy => {
                     name => 'string',
-                    keytype => 'string'
+                    keytype => 'string optional'
                 }
             }
         },
@@ -430,7 +430,11 @@ sub Commands {
         },
         key => {
             list => 1,
-            export => 1
+            export => 1,
+            rollover => {
+                zone => 1,
+                policy => 1
+            }
         }
     };
 }
