@@ -505,6 +505,7 @@ sub UpdateControlStart {
                 }
                 else {
                     $self->Successful($cb);
+                    undef($cmd_cb);
                 }
             };
             $cmd_cb->();
@@ -592,6 +593,7 @@ sub UpdateControlStop {
                 }
                 else {
                     $self->Successful($cb);
+                    undef($cmd_cb);
                 }
             };
             $cmd_cb->();
@@ -716,6 +718,7 @@ sub UpdateEnforcerUpdate {
                 }
                 else {
                     $self->Successful($cb);
+                    undef($cmd_cb);
                 }
             };
             $cmd_cb->();
@@ -794,6 +797,7 @@ sub CreateEnforcerZone {
             }
             else {
                 $self->Successful($cb);
+                undef($cmd_cb);
             }
         };
         $cmd_cb->();
@@ -932,6 +936,7 @@ sub DeleteEnforcerZone {
             }
             else {
                 $self->Successful($cb);
+                undef($cmd_cb);
             }
         };
         $cmd_cb->();
@@ -1164,6 +1169,7 @@ sub ReadEnforcerKeyList {
                 else {
                     $self->Successful($cb);
                 }
+                undef($cmd_cb);
             }
         };
         $cmd_cb->();
@@ -1269,7 +1275,7 @@ sub ReadEnforcerKeyExport {
                                 
                                 $line =~ s/;.*//o;
                                 
-                                if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
+                                if ($line =~ /^(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
                                     push(@rr, {
                                         name => $1,
                                         ttl => $2,
@@ -1304,6 +1310,7 @@ sub ReadEnforcerKeyExport {
                 else {
                     $self->Successful($cb);
                 }
+                undef($cmd_cb);
             }
         };
         $cmd_cb->();
@@ -1328,7 +1335,7 @@ sub ReadEnforcerKeyExport {
                         
                         $line =~ s/;.*//o;
                         
-                        if ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
+                        if ($line =~ /^(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(.+)$/o) {
                             push(@rr, {
                                 name => $1,
                                 ttl => $2,
