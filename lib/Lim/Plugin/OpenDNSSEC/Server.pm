@@ -2426,7 +2426,50 @@ sub ReadEnforcerZonelistExport {
 sub ReadSignerZones {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($data, $stderr, @zones);
+    Lim::Util::run_cmd [ 'ods-signer', 'zones' ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    if ($line =~ /^-\s+(\S+)$/o) {
+                        push(@zones, {
+                            name => $1
+                        });
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get Signer zones');
+                return;
+            }
+            elsif (scalar @zones == 1) {
+                $self->Successful($cb, { zone => $zones[0] });
+            }
+            elsif (scalar @zones) {
+                $self->Successful($cb, { zone => \@zones });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head2 function1
@@ -2434,9 +2477,70 @@ sub ReadSignerZones {
 =cut
 
 sub UpdateSignerSign {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-signer', 'sign', $zone->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to issue sign to Signer for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-signer', 'sign', '--all'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to issue sign to Signer for all zones');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -2444,9 +2548,46 @@ sub UpdateSignerSign {
 =cut
 
 sub UpdateSignerClear {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            return;
+        }
+        if (my $zone = shift(@zones)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'ods-signer', 'clear', $zone->{name}
+                ],
+                '<', '/dev/null',
+                '>', \$stdout,
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to issue clear to Signer for zone ', $zone->{name});
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1
@@ -2456,7 +2597,55 @@ sub UpdateSignerClear {
 sub ReadSignerQueue {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($data, $stderr, @task, $now);
+    Lim::Util::run_cmd [ 'ods-signer', 'queue' ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    if ($line =~ /^It\s+is\s+now\s+(.+)$/o) {
+                        $now = $1;
+                    }
+                    elsif ($line =~ /On\s+(.+)\s+I\s+will\s+\[([^\]]+)\]\s+zone\s+(.+)/o) {
+                        push(@task, {
+                            type => $2,
+                            date => $1,
+                            zone => $3
+                        });
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get Signer queue');
+                return;
+            }
+            elsif (scalar @task == 1) {
+                $self->Successful($cb, { now => $now, task => $task[0] });
+            }
+            elsif (scalar @task) {
+                $self->Successful($cb, { now => $now, task => \@task });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head2 function1
@@ -2466,7 +2655,28 @@ sub ReadSignerQueue {
 sub UpdateSignerFlush {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($stdout, $stderr);
+    Lim::Util::run_cmd [ 'ods-signer', 'flush' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to issue flush to Signer');
+                return;
+            }
+            $self->Successful($cb);
+        };
 }
 
 =head2 function1
@@ -2474,9 +2684,70 @@ sub UpdateSignerFlush {
 =cut
 
 sub UpdateSignerUpdate {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{zone}) {
+        my @zones = ref($q->{zone}) eq 'ARRAY' ? @{$q->{zone}} : ($q->{zone});
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $zone = shift(@zones)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-signer', 'update', $zone->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to issue update to Signer for zone ', $zone->{name});
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                $self->Successful($cb);
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd
+            [
+                'ods-signer', 'update', '--all'
+            ],
+            '<', '/dev/null',
+            '>', \$stdout,
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to issue update to Signer for all zones');
+                    return;
+                }
+                $self->Successful($cb);
+            };
+    }
 }
 
 =head2 function1
@@ -2486,7 +2757,32 @@ sub UpdateSignerUpdate {
 sub ReadSignerRunning {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($stdout, $stderr);
+    Lim::Util::run_cmd [ 'ods-signer', 'running' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if ($stderr =~ /Engine\s+not\s+running/o) {
+                $self->Successful($cb, { running => 0 });
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to issue running to Signer');
+                return;
+            }
+            $self->Successful($cb, { running => 1 });
+        };
 }
 
 =head2 function1
@@ -2496,7 +2792,28 @@ sub ReadSignerRunning {
 sub UpdateSignerReload {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($stdout, $stderr);
+    Lim::Util::run_cmd [ 'ods-signer', 'reload' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to issue reload to Signer');
+                return;
+            }
+            $self->Successful($cb);
+        };
 }
 
 =head2 function1
@@ -2504,9 +2821,30 @@ sub UpdateSignerReload {
 =cut
 
 sub UpdateSignerVerbosity {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{signer}) {
+        $self->Error($cb, 'No "ods-signer" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    weaken($self);
+    my ($stdout, $stderr);
+    Lim::Util::run_cmd [ 'ods-signer', 'verbosity', $q->{verbosity} ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to issue verbosity ', $q->{verbosity}, ' to Signer');
+                return;
+            }
+            $self->Successful($cb);
+        };
 }
 
 =head1 AUTHOR

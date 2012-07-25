@@ -417,31 +417,57 @@ sub Calls {
         # Calls for ods-signer *
         #
         ReadSignerZones => {
-            
+            out => {
+                zone => {
+                    name => 'string'
+                }
+            }
         },
         UpdateSignerSign => {
-            
+            in => {
+                zone => {
+                    name => 'string'
+                }
+            }
         },
         UpdateSignerClear => {
-            
+            in => {
+                zone => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            }
         },
         ReadSignerQueue => {
-            
+            out => {
+                now => 'string optional',
+                task => {
+                    type => 'string',
+                    date => 'string',
+                    zone => 'string'
+                }
+            }
         },
         UpdateSignerFlush => {
-            
         },
         UpdateSignerUpdate => {
-            
+            in => {
+                zone => {
+                    name => 'string'
+                }
+            }
         },
         ReadSignerRunning => {
-            
+            out => {
+                running => 'bool'
+            }
         },
         UpdateSignerReload => {
-            
         },
         UpdateSignerVerbosity => {
-            
+            in => {
+                verbosity => 'integer'
+            }
         }
     };
 }
@@ -518,6 +544,17 @@ sub Commands {
         },
         zonelist => {
             export => 1
+        },
+        signer => {
+            zones => 1,
+            sign => 1,
+            clear => 1,
+            queue => 1,
+            flush => 1,
+            update => 1,
+            running => 1,
+            reload => 1,
+            verbosity => 1
         }
     };
 }
