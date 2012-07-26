@@ -6,7 +6,7 @@ use base qw(Lim::Component);
 
 =head1 NAME
 
-...
+Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
 
 =head1 VERSION
 
