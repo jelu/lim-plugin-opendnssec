@@ -3,7 +3,8 @@ Section: perl
 Priority: optional
 Build-Depends: debhelper (>= 7)
 Build-Depends-Indep: libcommon-sense-perl (>= 3), perl,
- perl (>= 5.10.0) | libdigest-sha-perl (>= 5)
+ perl (>= 5.10.0) | libdigest-sha-perl (>= 5), liblim-server-perl (= 0.1-1),
+ liblim-client-perl (= 0.1-1), liblim-cli-perl (= 0.1-1)
 Maintainer: Jerry Lundström <lundstrom.jerry@gmail.com>
 Standards-Version: 3.9.1
 Homepage: http://search.cpan.org/dist/Lim-Plugin-OpenDNSSEC/
