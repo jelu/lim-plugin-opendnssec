@@ -10,11 +10,11 @@ Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
 
 =head1 VERSION
 
-Version 0.1
+Version 0.101
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = '0.101';
 
 =head1 SYNOPSIS
 
@@ -565,45 +565,25 @@ Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-lim at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Lim>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to L<https://github.com/jelu/lim-plugin-opendnssec/issues>.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Lim
-
+    perldoc Lim::Plugin::OpenDNSSEC
 
 You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker (report bugs here)
+=item * Lim issue tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Lim>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Lim>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Lim>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Lim/>
+L<https://github.com/jelu/lim-plugin-opendnssec/issues>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 

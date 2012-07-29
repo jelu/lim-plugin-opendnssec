@@ -23,9 +23,9 @@ WriteMakefile(
     (! eval { ExtUtils::MakeMaker->VERSION(6.46) } ? () :
         (META_ADD => {
             resources => {
-                homepage   => 'http://github.com/jelu/lim/wiki',
-                repository => 'http://github.com/jelu/lim',
-                bugtracker => 'http://github.com/jelu/lim/issues',
+                homepage   => 'http://github.com/jelu/lim-plugin-opendnssec/wiki',
+                repository => 'http://github.com/jelu/lim-plugin-opendnssec',
+                bugtracker => 'http://github.com/jelu/lim-plugin-opendnssec/issues',
             },
         })
     ),
