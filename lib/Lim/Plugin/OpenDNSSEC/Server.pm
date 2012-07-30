@@ -489,7 +489,11 @@ sub UpdateControlStart {
                     Lim::Util::run_cmd
                         [ 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
-                        '>', '/dev/null',
+                        '>', sub {
+                            if (defined $_[0]) {
+                                $cb->reset_timeout;
+                            }
+                        },
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
@@ -517,7 +521,11 @@ sub UpdateControlStart {
         Lim::Util::run_cmd
             [ 'ods-control', 'start' ],
             '<', '/dev/null',
-            '>', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                }
+            },
             '2>', '/dev/null',
             timeout => 30,
             cb => sub {
@@ -577,7 +585,11 @@ sub UpdateControlStop {
                     Lim::Util::run_cmd
                         [ 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
-                        '>', '/dev/null',
+                        '>', sub {
+                            if (defined $_[0]) {
+                                $cb->reset_timeout;
+                            }
+                        },
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
@@ -605,7 +617,11 @@ sub UpdateControlStop {
         Lim::Util::run_cmd
             [ 'ods-control', 'stop' ],
             '<', '/dev/null',
-            '>', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                }
+            },
             '2>', '/dev/null',
             timeout => 30,
             cb => sub {
@@ -642,7 +658,11 @@ sub CreateEnforcerSetup {
     my $stdin = "Y\015";
     Lim::Util::run_cmd [ 'ods-ksmutil', 'setup' ],
         '<', \$stdin,
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -702,7 +722,12 @@ sub UpdateEnforcerUpdate {
                     Lim::Util::run_cmd
                         [ 'ods-ksmutil', 'update', $section ],
                         '<', '/dev/null',
-                        '>', \$stdout,
+                        '>', sub {
+                            if (defined $_[0]) {
+                                $cb->reset_timeout;
+                                $stdout .= $_[0];
+                            }
+                        },
                         '2>', \$stderr,
                         timeout => 30,
                         cb => sub {
@@ -731,7 +756,12 @@ sub UpdateEnforcerUpdate {
         Lim::Util::run_cmd
             [ 'ods-ksmutil', 'update', 'all' ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -781,7 +811,12 @@ sub CreateEnforcerZone {
                         (exists $zone->{no_xml} and $zone->{no_xml} ? '--no-xml' : ())
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
@@ -825,6 +860,8 @@ sub ReadEnforcerZoneList {
         '>', sub {
             if (defined $_[0]) {
                 $data .= $_[0];
+                
+                $cb->reset_timeout;
                 
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
@@ -882,7 +919,12 @@ sub DeleteEnforcerZone {
                 Lim::Util::run_cmd
                     [ 'ods-ksmutil', 'zone', 'delete', '--all' ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -920,7 +962,12 @@ sub DeleteEnforcerZone {
                         (exists $zone->{no_xml} and $zone->{no_xml} ? '--no-xml' : ())
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
@@ -965,6 +1012,8 @@ sub ReadEnforcerRepositoryList {
         '>', sub {
             if (defined $_[0]) {
                 $data .= $_[0];
+                
+                $cb->reset_timeout;
                 
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
@@ -1027,6 +1076,8 @@ sub ReadEnforcerPolicyList {
         '>', sub {
             if (defined $_[0]) {
                 $data .= $_[0];
+                
+                $cb->reset_timeout;
                 
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
@@ -1122,6 +1173,8 @@ sub ReadEnforcerKeyList {
                         if (defined $_[0]) {
                             $data .= $_[0];
                             
+                            $cb->reset_timeout;
+                            
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
                                 
@@ -1187,6 +1240,8 @@ sub ReadEnforcerKeyList {
             '>', sub {
                 if (defined $_[0]) {
                     $data .= $_[0];
+                    
+                    $cb->reset_timeout;
                     
                     while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                         my $line = $1;
@@ -1270,6 +1325,8 @@ sub ReadEnforcerKeyExport {
                         if (defined $_[0]) {
                             $data .= $_[0];
                             
+                            $cb->reset_timeout;
+                            
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
                                 
@@ -1329,6 +1386,8 @@ sub ReadEnforcerKeyExport {
             '>', sub {
                 if (defined $_[0]) {
                     $data .= $_[0];
+                    
+                    $cb->reset_timeout;
                     
                     while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                         my $line = $1;
@@ -1417,7 +1476,12 @@ sub UpdateEnforcerKeyRollover {
                         (exists $zone->{keytype} ? ('--keytype' => $zone->{keytype}) : ())
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -1441,7 +1505,12 @@ sub UpdateEnforcerKeyRollover {
                         (exists $policy->{keytype} ? ('--keytype' => $policy->{keytype}) : ())
                     ],
                     '<', \$stdin,
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -1509,6 +1578,8 @@ sub DeleteEnforcerKeyPurge {
                         if (defined $_[0]) {
                             $data .= $_[0];
                             
+                            $cb->reset_timeout;
+                            
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
                                 
@@ -1544,6 +1615,8 @@ sub DeleteEnforcerKeyPurge {
                     '>', sub {
                         if (defined $_[0]) {
                             $data .= $_[0];
+                            
+                            $cb->reset_timeout;
                             
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
@@ -1620,6 +1693,8 @@ sub CreateEnforcerKeyGenerate {
                     if (defined $_[0]) {
                         $data .= $_[0];
                         
+                        $cb->reset_timeout;
+                        
                         while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                             my $line = $1;
                             
@@ -1693,7 +1768,12 @@ sub UpdateEnforcerKeyKskRetire {
                     (exists $zone->{keytag} ? ('--keytag' => $zone->{keytag}) : ())
                 ],
                 '<', \$stdin,
-                '>', \$stdout,
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
                 '2>', \$stderr,
                 timeout => 30,
                 cb => sub {
@@ -1754,7 +1834,12 @@ sub UpdateEnforcerKeyDsSeen {
                     (exists $zone->{no_retire} and $zone->{no_retire} ? ('--no-retire') : ())
                 ],
                 '<', '/dev/null',
-                '>', \$stdout,
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
                 '2>', \$stderr,
                 timeout => 30,
                 cb => sub {
@@ -1806,7 +1891,12 @@ sub UpdateEnforcerBackupPrepare {
                         '--repository', $repository->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -1835,7 +1925,12 @@ sub UpdateEnforcerBackupPrepare {
                 'ods-ksmutil', 'backup', 'prepare'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -1878,7 +1973,12 @@ sub UpdateEnforcerBackupCommit {
                         '--repository', $repository->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -1907,7 +2007,12 @@ sub UpdateEnforcerBackupCommit {
                 'ods-ksmutil', 'backup', 'commit'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -1950,7 +2055,12 @@ sub UpdateEnforcerBackupRollback {
                         '--repository', $repository->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -1979,7 +2089,12 @@ sub UpdateEnforcerBackupRollback {
                 'ods-ksmutil', 'backup', 'rollback'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -2022,7 +2137,12 @@ sub UpdateEnforcerBackupDone {
                         '--repository', $repository->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -2051,7 +2171,12 @@ sub UpdateEnforcerBackupDone {
                 'ods-ksmutil', 'backup', 'done'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -2098,6 +2223,8 @@ sub ReadEnforcerBackupList {
                     '>', sub {
                         if (defined $_[0]) {
                             $data .= $_[0];
+                            
+                            $cb->reset_timeout;
                             
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
@@ -2167,6 +2294,8 @@ sub ReadEnforcerBackupList {
             '>', sub {
                 if (defined $_[0]) {
                     $data .= $_[0];
+                    
+                    $cb->reset_timeout;
                     
                     while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                         my $line = $1;
@@ -2253,6 +2382,8 @@ sub ReadEnforcerRolloverList {
                         if (defined $_[0]) {
                             $data .= $_[0];
                             
+                            $cb->reset_timeout;
+                            
                             while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                                 my $line = $1;
                                 
@@ -2311,6 +2442,8 @@ sub ReadEnforcerRolloverList {
             '>', sub {
                 if (defined $_[0]) {
                     $data .= $_[0];
+                    
+                    $cb->reset_timeout;
                     
                     while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                         my $line = $1;
@@ -2371,7 +2504,12 @@ sub CreateEnforcerDatabaseBackup {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-ksmutil', 'database', 'backup' ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -2404,7 +2542,12 @@ sub ReadEnforcerZonelistExport {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-ksmutil', 'zonelist', 'export' ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -2438,6 +2581,8 @@ sub ReadSignerZones {
         '>', sub {
             if (defined $_[0]) {
                 $data .= $_[0];
+                
+                $cb->reset_timeout;
                 
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
@@ -2498,7 +2643,12 @@ sub UpdateSignerSign {
                         'ods-signer', 'sign', $zone->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -2527,7 +2677,12 @@ sub UpdateSignerSign {
                 'ods-signer', 'sign', '--all'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -2568,7 +2723,12 @@ sub UpdateSignerClear {
                     'ods-signer', 'clear', $zone->{name}
                 ],
                 '<', '/dev/null',
-                '>', \$stdout,
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
                 '2>', \$stderr,
                 timeout => 30,
                 cb => sub {
@@ -2609,6 +2769,8 @@ sub ReadSignerQueue {
         '>', sub {
             if (defined $_[0]) {
                 $data .= $_[0];
+                
+                $cb->reset_timeout;
                 
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
@@ -2664,7 +2826,12 @@ sub UpdateSignerFlush {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-signer', 'flush' ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -2705,7 +2872,12 @@ sub UpdateSignerUpdate {
                         'ods-signer', 'update', $zone->{name}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 30,
                     cb => sub {
@@ -2734,7 +2906,12 @@ sub UpdateSignerUpdate {
                 'ods-signer', 'update', '--all'
             ],
             '<', '/dev/null',
-            '>', \$stdout,
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
             '2>', \$stderr,
             timeout => 30,
             cb => sub {
@@ -2766,7 +2943,12 @@ sub ReadSignerRunning {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-signer', 'running' ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -2801,7 +2983,12 @@ sub UpdateSignerReload {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-signer', 'reload' ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
@@ -2832,7 +3019,12 @@ sub UpdateSignerVerbosity {
     my ($stdout, $stderr);
     Lim::Util::run_cmd [ 'ods-signer', 'verbosity', $q->{verbosity} ],
         '<', '/dev/null',
-        '>', \$stdout,
+        '>', sub {
+            if (defined $_[0]) {
+                $cb->reset_timeout;
+                $stdout .= $_[0];
+            }
+        },
         '2>', \$stderr,
         timeout => 30,
         cb => sub {
