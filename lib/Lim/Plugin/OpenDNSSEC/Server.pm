@@ -1124,9 +1124,90 @@ sub ReadEnforcerPolicyList {
 =cut
 
 sub ReadEnforcerPolicyExport {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{ksmutil}) {
+        $self->Error($cb, 'No "ods-ksmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    # TODO is there a way to send the database as base64 incrementaly to avoid hogning memory?
+    
+    if (exists $q->{policy}) {
+        my @policies = ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : ($q->{policy});
+        my %policy;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                return;
+            }
+            if (my $policy = shift(@policies)) {
+                my ($stdout, $stderr);
+                Lim::Util::run_cmd
+                    [
+                        'ods-ksmutil', 'policy', 'export',
+                        '--policy', $policy->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get Enforcer policy export for policy ', $policy->{name});
+                            return;
+                        }
+                        $policy{$policy->{name}} = {
+                            name => $policy->{name},
+                            kasp => $stdout
+                        };
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar %policy) {
+                    $self->Successful($cb, { policy => [ values %policy ] });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($stdout, $stderr);
+        Lim::Util::run_cmd [ 'ods-ksmutil', 'policy', 'export', '--all' ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $cb->reset_timeout;
+                    $stdout .= $_[0];
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to export policies');
+                    return;
+                }
+                $self->Successful($cb, { kasp => $stdout });
+            };
+    }
 }
 
 =head2 function1

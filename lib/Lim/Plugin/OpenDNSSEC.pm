@@ -189,15 +189,14 @@ sub Calls {
         ReadEnforcerPolicyExport => {
             in => {
                 policy => {
-                    '' => 'required',
-                    all => 'bool optional',
-                    name => 'string optional'
+                    name => 'string'
                 }
             },
             out => {
+                kasp => 'string optional',
                 policy => {
                     name => 'string',
-                    content => 'string'
+                    kasp => 'string'
                 }
             }
         },
@@ -508,7 +507,8 @@ sub Commands {
             list => 1
         },
         policy => {
-            list => 1
+            list => 1,
+            export => 1
         },
         key => {
             list => 1,

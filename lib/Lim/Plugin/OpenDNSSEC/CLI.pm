@@ -680,6 +680,72 @@ sub policy {
         });
         return;
     }
+    elsif ($args->[0] eq 'export') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @policies;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@policies, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadEnforcerPolicyExport({
+                policy => \@policies
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{policy}) {
+                        foreach my $policy (ref($response->{policy}) eq 'ARRAY' ? @{$response->{policy}} : $response->{policy}) {
+                            $self->cli->println('Policy export for policy ', $policy->{name});
+                            $self->cli->println($policy->{kasp});
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadEnforcerPolicyExport(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{kasp}) {
+                        $self->cli->println($response->{kasp});
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
     $self->Error;
 }
 
