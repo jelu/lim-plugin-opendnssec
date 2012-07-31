@@ -3246,6 +3246,76 @@ sub UpdateSignerVerbosity {
         };
 }
 
+=head2 function1
+
+=cut
+
+sub ReadHsmList {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateHsmGenerate {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteHsmRemove {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteHsmPurge {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub CreateHsmDnskey {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadHsmTest {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 function1
+
+=cut
+
+sub ReadHsmInfo {
+    my ($self, $cb) = @_;
+    
+    $self->Error($cb, 'Not Implemented');
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>
