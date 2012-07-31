@@ -634,6 +634,9 @@ sub Commands {
             running => 1,
             reload => 1,
             verbosity => 1
+        },
+        hsm => {
+            list => 1
         }
     };
 }

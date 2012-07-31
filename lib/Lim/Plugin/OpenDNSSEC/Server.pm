@@ -69,7 +69,8 @@ sub Init {
         enforcerd => 0,
         ksmutil => 0,
         signer => 0,
-        signerd => 0
+        signerd => 0,
+        hsmutil => 0
     };
     $self->{bin_version} = {};
     
@@ -210,6 +211,37 @@ sub Init {
         }
     }
     
+    my $cv = Lim::Util::run_cmd [ 'ods-hsmutil', '-V' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr;
+    if ($cv->recv) {
+        $self->{logger}->warn('Unable to find "ods-hsmutil" executable, module functions limited');
+    }
+    else {
+        if ($stdout =~ /version\s+([0-9]+)\.([0-9]+)\.([0-9]+)/o) {
+            my ($major,$minor,$patch) = ($1, $2, $3);
+            
+            if ($major > 0 and $major < 10 and $minor > -1 and $minor < 10 and $patch > -1 and $patch < 100) {
+                my $version = ($major * 1000000) + ($minor * 1000) + $patch;
+                
+                unless ($version >= OPENDNSSEC_VERSION_MIN and $version <= OPENDNSSEC_VERSION_MAX) {
+                    $self->{logger}->warn('Unsupported "ods-hsmutil" executable version, unable to continue');
+                }
+                else {
+                    $self->{bin}->{hsmutil} = $version;
+                    $self->{bin_version}->{hsmutil} = $major.'.'.$minor.'.'.$patch;
+                }
+            }
+            else {
+                $self->{logger}->warn('Invalid "ods-hsmutil" version, module functions limited');
+            }
+        }
+        else {
+            $self->{logger}->warn('Unable to get "ods-hsmutil" version, module functions limited');
+        }
+    }
+
     my $version = 0;
     foreach my $program (keys %{$self->{bin}}) {
         if ($program eq 'control') {
@@ -3251,9 +3283,140 @@ sub UpdateSignerVerbosity {
 =cut
 
 sub ReadHsmList {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    if (exists $q->{repository}) {
+        my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+        my @keys;
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                undef($cmd_cb);
+                return;
+            }
+            if (my $repository = shift(@repositories)) {
+                my ($data, $stderr);
+                my $skip = 5;
+                Lim::Util::run_cmd
+                    [
+                        'ods-hsmutil', 'list', $repository->{name}
+                    ],
+                    '<', '/dev/null',
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $data .= $_[0];
+                            
+                            $cb->reset_timeout;
+                            
+                            while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                                my $line = $1;
+                                
+                                if ($skip) {
+                                    $skip--;
+                                    next;
+                                }
+                                
+                                if ($line =~ /^(\S+)\s+(\S+)\s+(\w+)\/(\d+)\s*$/o) {
+                                    push(@keys, {
+                                        repository => $1,
+                                        id => $2,
+                                        keytype => $3,
+                                        keysize => $4
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    '2>', \$stderr,
+                    timeout => 30,
+                    cb => sub {
+                        unless (defined $self) {
+                            undef($cmd_cb);
+                            return;
+                        }
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to get hsm key list for repository ', $repository->{name});
+                            undef($cmd_cb);
+                            return;
+                        }
+                        $cmd_cb->();
+                    };
+            }
+            else {
+                if (scalar @keys == 1) {
+                    $self->Successful($cb, { key => $keys[0] });
+                }
+                elsif (scalar @keys) {
+                    $self->Successful($cb, { key => \@keys });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+                undef($cmd_cb);
+            }
+        };
+        $cmd_cb->();
+    }
+    else {
+        weaken($self);
+        my ($data, $stderr, @keys);
+        my $skip = 5;
+        Lim::Util::run_cmd
+            [
+                'ods-hsmutil', 'list'
+            ],
+            '<', '/dev/null',
+            '>', sub {
+                if (defined $_[0]) {
+                    $data .= $_[0];
+                    
+                    $cb->reset_timeout;
+                    
+                    while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                        my $line = $1;
+                        
+                        if ($skip) {
+                            $skip--;
+                            next;
+                        }
+                        
+                        if ($line =~ /^(\S+)\s+(\S+)\s+(\w+)\/(\d+)\s*$/o) {
+                            push(@keys, {
+                                repository => $1,
+                                id => $2,
+                                keytype => $3,
+                                keysize => $4
+                            });
+                        }
+                    }
+                }
+            },
+            '2>', \$stderr,
+            timeout => 30,
+            cb => sub {
+                unless (defined $self) {
+                    return;
+                }
+                if (shift->recv) {
+                    $self->Error($cb, 'Unable to get hsm key list');
+                    return;
+                }
+                if (scalar @keys == 1) {
+                    $self->Successful($cb, { key => $keys[0] });
+                }
+                elsif (scalar @keys) {
+                    $self->Successful($cb, { key => \@keys });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+    }
 }
 
 =head2 function1

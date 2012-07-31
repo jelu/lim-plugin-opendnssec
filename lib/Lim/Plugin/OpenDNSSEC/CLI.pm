@@ -2076,6 +2076,101 @@ sub signer {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub hsm {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args >= 1) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'list') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        if (scalar @$args > 1) {
+            my @repositories;
+            my $skip = 1;
+            
+            foreach (@$args) {
+                if ($skip) {
+                    $skip--;
+                    next;
+                }
+                
+                push(@repositories, { name => $_ });
+            }
+            
+            weaken($self);
+            $opendnssec->ReadHsmList({
+                repository => \@repositories
+            }, sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{key}) {
+                        $self->cli->println(join("\t", 'Repository', 'ID', 'Keytype', 'Keysize'));
+                        foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                            $self->cli->println(join("\t",
+                                $key->{repository},
+                                $key->{id},
+                                $key->{keytype},
+                                $key->{keysize}
+                            ));
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+        else {
+            weaken($self);
+            $opendnssec->ReadHsmList(sub {
+                my ($call, $response) = @_;
+                
+                unless (defined $self) {
+                    undef($opendnssec);
+                    return;
+                }
+                
+                if ($call->Successful) {
+                    if (exists $response->{key}) {
+                        $self->cli->println(join("\t", 'Repository', 'ID', 'Keytype', 'Keysize'));
+                        foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                            $self->cli->println(join("\t",
+                                $key->{repository},
+                                $key->{id},
+                                $key->{keytype},
+                                $key->{keysize}
+                            ));
+                        }
+                    }
+                    $self->Successful;
+                }
+                else {
+                    $self->Error($call->Error);
+                }
+                undef($opendnssec);
+            });
+            return;
+        }
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>
