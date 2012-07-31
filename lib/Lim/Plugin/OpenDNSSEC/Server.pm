@@ -483,6 +483,7 @@ sub UpdateControlStart {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 unless (defined $self) {
+                    undef($cmd_cb);
                     return;
                 }
                 if (my $program = shift(@programs)) {
@@ -498,10 +499,12 @@ sub UpdateControlStart {
                         timeout => 30,
                         cb => sub {
                             unless (defined $self) {
+                                undef($cmd_cb);
                                 return;
                             }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to start OpenDNSSEC '.$program);
+                                undef($cmd_cb);
                                 return;
                             }
                             $cmd_cb->();
@@ -579,6 +582,7 @@ sub UpdateControlStop {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 unless (defined $self) {
+                    undef($cmd_cb);
                     return;
                 }
                 if (my $program = shift(@programs)) {
@@ -594,10 +598,12 @@ sub UpdateControlStop {
                         timeout => 30,
                         cb => sub {
                             unless (defined $self) {
+                                undef($cmd_cb);
                                 return;
                             }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to stop OpenDNSSEC '.$program);
+                                undef($cmd_cb);
                                 return;
                             }
                             $cmd_cb->();
@@ -715,6 +721,7 @@ sub UpdateEnforcerUpdate {
             weaken($self);
             my $cmd_cb; $cmd_cb = sub {
                 unless (defined $self) {
+                    undef($cmd_cb);
                     return;
                 }
                 if (my $section = shift(@sections)) {
@@ -732,10 +739,12 @@ sub UpdateEnforcerUpdate {
                         timeout => 30,
                         cb => sub {
                             unless (defined $self) {
+                                undef($cmd_cb);
                                 return;
                             }
                             if (shift->recv) {
                                 $self->Error($cb, 'Unable to update Enforcer configuration section '.$section);
+                                undef($cmd_cb);
                                 return;
                             }
                             $cmd_cb->();
@@ -796,6 +805,7 @@ sub CreateEnforcerZone {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -821,10 +831,12 @@ sub CreateEnforcerZone {
                     timeout => 10,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -944,6 +956,7 @@ sub DeleteEnforcerZone {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -952,6 +965,7 @@ sub DeleteEnforcerZone {
                 }
                 unless (defined $zone) {
                     $self->Successful($cb);
+                    undef($cmd_cb);
                     return;
                 }
                 my ($stdout, $stderr);
@@ -972,10 +986,12 @@ sub DeleteEnforcerZone {
                     timeout => 10,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to delete zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1139,6 +1155,7 @@ sub ReadEnforcerPolicyExport {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $policy = shift(@policies)) {
@@ -1159,10 +1176,12 @@ sub ReadEnforcerPolicyExport {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to get Enforcer policy export for policy ', $policy->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $policy{$policy->{name}} = {
@@ -1238,6 +1257,7 @@ sub ReadEnforcerKeyList {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -1287,10 +1307,12 @@ sub ReadEnforcerKeyList {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to get Enforcer key list for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1389,6 +1411,7 @@ sub ReadEnforcerKeyExport {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -1429,10 +1452,12 @@ sub ReadEnforcerKeyExport {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to get Enforcer key export for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1546,6 +1571,7 @@ sub UpdateEnforcerKeyRollover {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -1567,10 +1593,12 @@ sub UpdateEnforcerKeyRollover {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue Enforcer key rollover for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1596,10 +1624,12 @@ sub UpdateEnforcerKeyRollover {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue Enforcer key rollover for policy ', $policy->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1645,6 +1675,7 @@ sub DeleteEnforcerKeyPurge {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -1676,10 +1707,12 @@ sub DeleteEnforcerKeyPurge {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue Enforcer key rollover for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1714,10 +1747,12 @@ sub DeleteEnforcerKeyPurge {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue Enforcer key rollover for policy ', $policy->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -1759,6 +1794,7 @@ sub CreateEnforcerKeyGenerate {
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
         unless (defined $self) {
+            undef($cmd_cb);
             return;
         }
         if (my $policy = shift(@policies)) {
@@ -1795,10 +1831,12 @@ sub CreateEnforcerKeyGenerate {
                 timeout => 30,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
                         $self->Error($cb, 'Unable to generate keys for policy ', $policy->{name});
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -1836,6 +1874,7 @@ sub UpdateEnforcerKeyKskRetire {
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
         unless (defined $self) {
+            undef($cmd_cb);
             return;
         }
         if (my $zone = shift(@zones)) {
@@ -1859,6 +1898,7 @@ sub UpdateEnforcerKeyKskRetire {
                 timeout => 30,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
@@ -1872,6 +1912,7 @@ sub UpdateEnforcerKeyKskRetire {
                             (exists $zone->{keytag} ? ' keytag '.$zone->{keytag} : ''),
                             ' error: ', (defined $error ? $error : 'unknown')
                             );
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -1902,6 +1943,7 @@ sub UpdateEnforcerKeyDsSeen {
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
         unless (defined $self) {
+            undef($cmd_cb);
             return;
         }
         if (my $zone = shift(@zones)) {
@@ -1925,6 +1967,7 @@ sub UpdateEnforcerKeyDsSeen {
                 timeout => 30,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
@@ -1932,6 +1975,7 @@ sub UpdateEnforcerKeyDsSeen {
                             (exists $zone->{cka_id} ? ' cka_id '.$zone->{cka_id} : ''),
                             (exists $zone->{keytag} ? ' keytag '.$zone->{keytag} : '')
                             );
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -1962,6 +2006,7 @@ sub UpdateEnforcerBackupPrepare {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $repository = shift(@repositories)) {
@@ -1982,10 +2027,12 @@ sub UpdateEnforcerBackupPrepare {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to prepare backup of repository ', $repository->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2044,6 +2091,7 @@ sub UpdateEnforcerBackupCommit {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $repository = shift(@repositories)) {
@@ -2064,10 +2112,12 @@ sub UpdateEnforcerBackupCommit {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to commit backup of repository ', $repository->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2126,6 +2176,7 @@ sub UpdateEnforcerBackupRollback {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $repository = shift(@repositories)) {
@@ -2146,10 +2197,12 @@ sub UpdateEnforcerBackupRollback {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to rollback backup of repository ', $repository->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2208,6 +2261,7 @@ sub UpdateEnforcerBackupDone {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $repository = shift(@repositories)) {
@@ -2228,10 +2282,12 @@ sub UpdateEnforcerBackupDone {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to take backup of repository ', $repository->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2291,6 +2347,7 @@ sub ReadEnforcerBackupList {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $repository = shift(@respositories)) {
@@ -2343,10 +2400,12 @@ sub ReadEnforcerBackupList {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to get Enforcer backup list for repository ', $repository->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2448,6 +2507,7 @@ sub ReadEnforcerRolloverList {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -2487,10 +2547,12 @@ sub ReadEnforcerRolloverList {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to get Enforcer rollover list for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2715,6 +2777,7 @@ sub UpdateSignerSign {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -2734,10 +2797,12 @@ sub UpdateSignerSign {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue sign to Signer for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -2795,6 +2860,7 @@ sub UpdateSignerClear {
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
         unless (defined $self) {
+            undef($cmd_cb);
             return;
         }
         if (my $zone = shift(@zones)) {
@@ -2814,10 +2880,12 @@ sub UpdateSignerClear {
                 timeout => 30,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
                         $self->Error($cb, 'Unable to issue clear to Signer for zone ', $zone->{name});
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -2944,6 +3012,7 @@ sub UpdateSignerUpdate {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
             unless (defined $self) {
+                undef($cmd_cb);
                 return;
             }
             if (my $zone = shift(@zones)) {
@@ -2963,10 +3032,12 @@ sub UpdateSignerUpdate {
                     timeout => 30,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to issue update to Signer for zone ', $zone->{name});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
