@@ -464,6 +464,87 @@ sub Calls {
             in => {
                 verbosity => 'integer'
             }
+        },
+        #
+        # Calls for ods-hsmutil *
+        #
+        ReadHsmList => {
+            in => {
+                repository => {
+                    name => 'string'
+                }
+            },
+            out => {
+                key => {
+                    repository => 'string',
+                    id => 'string',
+                    keytype => 'string',
+                    keysize => 'integer'
+                }
+            }
+        },
+        CreateHsmGenerate => {
+            in => {
+                key => {
+                    '' => 'required',
+                    repository => 'string',
+                    keysize => 'integer'
+                }
+            },
+            out => {
+                key => {
+                    repository => 'string',
+                    id => 'string',
+                    keysize => 'integer',
+                    keytype => 'string'
+                }
+            }
+        },
+        DeleteHsmRemove => {
+            in => {
+                key => {
+                    '' => 'required',
+                    id => 'string'
+                }
+            }
+        },
+        DeleteHsmPurge => {
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            }
+        },
+        CreateHsmDnskey => {
+            in => {
+                key => {
+                    '' => 'required',
+                    id => 'string',
+                    name => 'string'
+                }
+            }
+        },
+        ReadHsmTest => {
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            }
+        },
+        ReadHsmInfo => {
+            out => {
+                repository => {
+                    name => 'string',
+                    module => 'string',
+                    slot => 'integer',
+                    token_label => 'string',
+                    manufacturer => 'string',
+                    model => 'string',
+                    serial => 'string'
+                }
+            }
         }
     };
 }
