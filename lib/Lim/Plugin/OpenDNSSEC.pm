@@ -251,20 +251,17 @@ sub Calls {
         },
         CreateEnforcerKeyImport => {
             in => {
-                zone => {
+                key => {
                     '' => 'required',
-                    name => 'string',
-                    key => {
-                        '' => 'required',
-                        cka_id => 'string',
-                        repository => 'string',
-                        bits => 'integer',
-                        algorithm => 'integer',
-                        keystate => 'string',
-                        keytype => 'string',
-                        time => 'string',
-                        retire => 'string optional'
-                    }
+                    zone => 'string',
+                    cka_id => 'string',
+                    repository => 'string',
+                    bits => 'integer',
+                    algorithm => 'integer',
+                    keystate => 'string',
+                    keytype => 'string',
+                    time => 'string',
+                    retire => 'string optional'
                 }
             }
         },
@@ -513,6 +510,7 @@ sub Commands {
         key => {
             list => 1,
             export => 1,
+            import => 1,
             rollover => {
                 zone => 1,
                 policy => 1

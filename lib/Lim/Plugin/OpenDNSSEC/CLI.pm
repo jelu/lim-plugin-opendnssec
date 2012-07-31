@@ -762,6 +762,12 @@ sub key {
     my $cka_id;
     my $keytag;
     my $retire = 1;
+    my $repository;
+    my $bits;
+    my $algorithm;
+    my $time;
+    my $retire_time;
+    my $zone;
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
         'verbose' => \$verbose,
         'keystate:s' => \$keystate,
@@ -769,7 +775,13 @@ sub key {
         'ds' => \$ds,
         'cka_id:s' => \$cka_id,
         'keytag:s' => \$keytag,
-        'retire!' => \$retire
+        'retire!' => \$retire,
+        'repository:s' => \$repository,
+        'bits:i' => \$bits,
+        'algorithm:s' => \$algorithm,
+        'time:s' => \$time,
+        'retire-time:s' => \$retire_time,
+        'zone:s' => \$zone
     );
 
     unless ($getopt and scalar @$args >= 1) {
@@ -960,6 +972,40 @@ sub key {
             });
             return;
         }
+    }
+    elsif ($args->[0] eq 'import' and defined $cka_id and defined $repository and defined $bits and defined $algorithm and defined $keystate and defined $keytype and defined $time and defined $zone) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->CreateEnforcerKeyImport({
+            key => {
+                zone => $zone,
+                cka_id => $cka_id,
+                repository => $repository,
+                bits => $bits,
+                algorithm => $algorithm,
+                keystate => $keystate,
+                keytype => $keytype,
+                time => $time,
+                (defined $retire_time ? (retire => $retire_time) : ())
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                $self->cli->println('Key imported');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
     }
     elsif ($args->[0] eq 'rollover' and scalar @$args >= 2 and ($args->[1] eq 'zone' or $args->[1] eq 'policy')) {
         my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
@@ -1152,7 +1198,6 @@ sub key {
         });
         return;
     }
-    
     $self->Error;
 }
 
