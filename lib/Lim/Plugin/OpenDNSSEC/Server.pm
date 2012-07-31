@@ -1236,7 +1236,7 @@ sub ReadEnforcerPolicyExport {
 sub DeleteEnforcerPolicyPurge {
     my ($self, $cb) = @_;
 
-    $self->Error($cb, 'Not Implemented');
+    $self->Error($cb, 'Not Implemented: function experimental');
 }
 
 =head2 function1
