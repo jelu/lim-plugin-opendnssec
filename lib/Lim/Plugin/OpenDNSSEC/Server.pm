@@ -3687,9 +3687,54 @@ sub CreateHsmDnskey {
 =cut
 
 sub ReadHsmTest {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
+        if (my $repository = shift(@repositories)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'ods-hsmutil', 'test', $repository->{name}
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        undef($cmd_cb);
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to test hsm repository ', $repository->{name});
+                        undef($cmd_cb);
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1
@@ -3697,9 +3742,99 @@ sub ReadHsmTest {
 =cut
 
 sub ReadHsmInfo {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @repositories;
+    weaken($self);
+    my ($data, $stderr, $repository);
+    Lim::Util::run_cmd
+        [
+            'ods-hsmutil', 'info'
+        ],
+        '<', '/dev/null',
+        '>', sub {
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                $cb->reset_timeout;
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    if ($line =~ /^Repository:\s+(.+)$/o) {
+                        my $name = $1;
+                        if (defined $repository) {
+                            foreach (qw(name module slot token_label manufacturer model serial)) {
+                                unless (exists $repository->{$_}) {
+                                    undef($repository);
+                                    last;
+                                }
+                            }
+                            if (defined $repository) {
+                                push(@repositories, $repository);
+                            }
+                        }
+                        $repository = {
+                            name => $name
+                        };
+                    }
+                    elsif ($line =~ /Module:\s+(.+)$/o) {
+                        $repository->{module} = $1;
+                    }
+                    elsif ($line =~ /Slot:\s+(\d+)$/o) {
+                        $repository->{slot} = $1;
+                    }
+                    # TODO spaces in names?
+                    elsif ($line =~ /Token\s+Label:\s+(\S+)/o) {
+                        $repository->{token_label} = $1;
+                    }
+                    elsif ($line =~ /Manufacturer:\s+(\S+)/o) {
+                        $repository->{manufacturer} = $1;
+                    }
+                    elsif ($line =~ /Model:\s+(\S+)/o) {
+                        $repository->{model} = $1;
+                    }
+                    elsif ($line =~ /Serial:\s+(\S+)/o) {
+                        $repository->{serial} = $1;
+                    }
+                }
+            }
+        },
+        '2>', \$stderr,
+        timeout => 30,
+        cb => sub {
+            unless (defined $self) {
+                return;
+            }
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to get hsm repository info');
+                return;
+            }
+            if (defined $repository) {
+                foreach (qw(name module slot token_label manufacturer model serial)) {
+                    unless (exists $repository->{$_}) {
+                        undef($repository);
+                        last;
+                    }
+                }
+                if (defined $repository) {
+                    push(@repositories, $repository);
+                }
+            }
+            if (scalar @repositories == 1) {
+                $self->Successful($cb, { repository => $repositories[0] });
+            }
+            elsif (scalar @repositories) {
+                $self->Successful($cb, { repository => \@repositories });
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
 }
 
 =head1 AUTHOR

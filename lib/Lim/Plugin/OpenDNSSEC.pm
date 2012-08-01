@@ -647,7 +647,9 @@ sub Commands {
             generate => 1,
             remove => 1,
             purge => 1,
-            dnskey => 1
+            dnskey => 1,
+            test => 1,
+            info => 1
         }
     };
 }

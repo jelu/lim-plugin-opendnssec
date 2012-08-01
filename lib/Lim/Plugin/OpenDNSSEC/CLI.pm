@@ -2313,6 +2313,77 @@ sub hsm {
         });
         return;
     }
+    elsif ($args->[0] eq 'test' and scalar @$args > 1) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        my @repositories;
+        my $skip = 1;
+        
+        foreach (@$args) {
+            if ($skip) {
+                $skip--;
+                next;
+            }
+            
+            push(@repositories, { name => $_ });
+        }
+        
+        weaken($self);
+        $opendnssec->ReadHsmTest({
+            repository => \@repositories
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                $self->cli->println('Repositories successfully tested');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
+    elsif ($args->[0] eq 'info') {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->ReadHsmInfo(sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{repository}) {
+                    $self->cli->println(join("\t", 'Repository', 'Module', 'Slot', 'Token Label', 'Manufacturer', 'Model', 'Serial'));
+                    foreach my $repository (ref($response->{repository}) eq 'ARRAY' ? @{$response->{repository}} : $response->{repository}) {
+                        $self->cli->println(join("\t",
+                            $repository->{name},
+                            $repository->{module},
+                            $repository->{slot},
+                            $repository->{token_label},
+                            $repository->{manufacturer},
+                            $repository->{model},
+                            $repository->{serial}
+                        ));
+                    }
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 
