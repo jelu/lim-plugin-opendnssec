@@ -3506,9 +3506,54 @@ sub CreateHsmGenerate {
 =cut
 
 sub DeleteHsmRemove {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @keys = ref($q->{key}) eq 'ARRAY' ? @{$q->{key}} : ($q->{key});
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
+        if (my $key = shift(@keys)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'ods-hsmutil', 'remove', $key->{id}
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        undef($cmd_cb);
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to remove hsm key id ', $key->{id});
+                        undef($cmd_cb);
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

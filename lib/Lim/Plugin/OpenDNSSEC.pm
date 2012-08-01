@@ -637,7 +637,8 @@ sub Commands {
         },
         hsm => {
             list => 1,
-            generate => 1
+            generate => 1,
+            remove => 1
         }
     };
 }

@@ -2206,6 +2206,42 @@ sub hsm {
         });
         return;
     }
+    elsif ($args->[0] eq 'remove' and scalar @$args > 1) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        my @keys;
+        my $skip = 1;
+        
+        foreach (@$args) {
+            if ($skip) {
+                $skip--;
+                next;
+            }
+            
+            push(@keys, { id => $_ });
+        }
+        
+        weaken($self);
+        $opendnssec->DeleteHsmRemove({
+            key => \@keys
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                $self->cli->println('Key(s) removed');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 
