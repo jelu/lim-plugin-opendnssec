@@ -3617,9 +3617,69 @@ sub DeleteHsmPurge {
 =cut
 
 sub CreateHsmDnskey {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @keys = ref($q->{key}) eq 'ARRAY' ? @{$q->{key}} : ($q->{key});
+    my @dnskeys;
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
+        if (my $key = shift(@keys)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'ods-hsmutil', 'dnskey', $key->{id}, $key->{name}
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        undef($cmd_cb);
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to remove hsm key id ', $key->{id});
+                        undef($cmd_cb);
+                        return;
+                    }
+                    $stdout =~ s/[\r\n].*//o;
+                    push(@dnskeys, {
+                        id => $key->{id},
+                        name => $key->{name},
+                        rr => $stdout
+                    });
+                    $cmd_cb->();
+                };
+        }
+        else {
+            if (scalar @dnskeys == 1) {
+                $self->Successful($cb, { key => $dnskeys[0] });
+            }
+            elsif (scalar @dnskeys) {
+                $self->Successful($cb, { key => \@dnskeys });
+            }
+            else {
+                $self->Successful($cb);
+            }
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

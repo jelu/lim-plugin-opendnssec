@@ -2280,6 +2280,39 @@ sub hsm {
         });
         return;
     }
+    elsif ($args->[0] eq 'dnskey' and scalar @$args == 3) {
+        my (undef, $id, $name) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->CreateHsmDnskey({
+            key => {
+                id => $id,
+                name => $name
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{key}) {
+                    $self->cli->println('DNSKEY Resource Record(s):');
+                    foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                        $self->cli->println($key->{rr});
+                    }
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 

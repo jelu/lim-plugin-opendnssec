@@ -523,6 +523,13 @@ sub Calls {
                     id => 'string',
                     name => 'string'
                 }
+            },
+            out => {
+                key => {
+                    id => 'string',
+                    name => 'string',
+                    rr => 'string'
+                }
             }
         },
         ReadHsmTest => {
@@ -639,7 +646,8 @@ sub Commands {
             list => 1,
             generate => 1,
             remove => 1,
-            purge => 1
+            purge => 1,
+            dnskey => 1
         }
     };
 }
