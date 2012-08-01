@@ -1,3 +1,11 @@
+liblim-plugin-opendnssec-perl (0.101-1) unstable; urgency=low
+
+  * New upstream release v0.101.
+  * Fix homepage URL.
+  * Update description for all packages.
+
+ -- Jerry Lundström <lundstrom.jerry@gmail.com>  Wed, 01 Aug 2012 11:22:49 -0700
+
 liblim-plugin-opendnssec-perl (0.1-1) unstable; urgency=low
 
   * Initial Release.
