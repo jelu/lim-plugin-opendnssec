@@ -636,7 +636,8 @@ sub Commands {
             verbosity => 1
         },
         hsm => {
-            list => 1
+            list => 1,
+            generate => 1
         }
     };
 }

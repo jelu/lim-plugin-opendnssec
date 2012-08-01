@@ -3424,9 +3424,81 @@ sub ReadHsmList {
 =cut
 
 sub CreateHsmGenerate {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @keys = ref($q->{key}) eq 'ARRAY' ? @{$q->{key}} : ($q->{key});
+    my @generated;
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
+        if (my $key = shift(@keys)) {
+            my ($data, $stderr, $bits, $keytype, $repository, $id);
+            Lim::Util::run_cmd
+                [
+                    'ods-hsmutil', 'generate', $key->{repository}, 'rsa', $key->{keysize}
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $data .= $_[0];
+                        
+                        $cb->reset_timeout;
+                        
+                        while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                            my $line = $1;
+                            
+                            if ($line =~ /^Generating\s+(\d+)\s+bit\s+(\w+)\s+key\s+in\s+repository:\s+(.+)$/o) {
+                                ($bits, $keytype, $repository) = ($1, $2, $3);
+                            }
+                            elsif ($line =~ /^Key\s+generation\s+successful:\s+(\S+)$/o) {
+                                $id = $1;
+                            }
+                        }
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        undef($cmd_cb);
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to generate hsm key in repository ', $key->{name});
+                        undef($cmd_cb);
+                        return;
+                    }
+                    push(@generated, {
+                        repository => $repository,
+                        id => $id,
+                        keytype => $keytype,
+                        keysize => $bits
+                    });
+                    $cmd_cb->();
+                };
+        }
+        else {
+            if (scalar @generated == 1) {
+                $self->Successful($cb, { key => $generated[0] });
+            }
+            elsif (scalar @generated) {
+                $self->Successful($cb, { key => \@generated });
+            }
+            else {
+                $self->Successful($cb);
+            }
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

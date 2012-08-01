@@ -2168,6 +2168,44 @@ sub hsm {
             return;
         }
     }
+    elsif ($args->[0] eq 'generate' and scalar @$args == 3) {
+        my (undef, $repository, $keysize) = @$args;
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        weaken($self);
+        $opendnssec->CreateHsmGenerate({
+            key => {
+                repository => $repository,
+                keysize => $keysize
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                if (exists $response->{key}) {
+                    $self->cli->println(join("\t", 'Repository', 'ID', 'Keytype', 'Keysize'));
+                    foreach my $key (ref($response->{key}) eq 'ARRAY' ? @{$response->{key}} : $response->{key}) {
+                        $self->cli->println(join("\t",
+                            $key->{repository},
+                            $key->{id},
+                            $key->{keytype},
+                            $key->{keysize}
+                        ));
+                    }
+                }
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 
