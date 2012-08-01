@@ -2242,6 +2242,44 @@ sub hsm {
         });
         return;
     }
+    elsif ($args->[0] eq 'purge' and scalar @$args > 1) {
+        my $opendnssec = Lim::Plugin::OpenDNSSEC->Client;
+        my @repositories;
+        my $skip = 1;
+        
+        # TODO ask user
+        
+        foreach (@$args) {
+            if ($skip) {
+                $skip--;
+                next;
+            }
+            
+            push(@repositories, { name => $_ });
+        }
+        
+        weaken($self);
+        $opendnssec->DeleteHsmPurge({
+            repository => \@repositories
+        }, sub {
+            my ($call, $response) = @_;
+            
+            unless (defined $self) {
+                undef($opendnssec);
+                return;
+            }
+            
+            if ($call->Successful) {
+                $self->cli->println('Repositories purged');
+                $self->Successful;
+            }
+            else {
+                $self->Error($call->Error);
+            }
+            undef($opendnssec);
+        });
+        return;
+    }
     $self->Error;
 }
 

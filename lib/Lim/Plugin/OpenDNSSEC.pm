@@ -638,7 +638,8 @@ sub Commands {
         hsm => {
             list => 1,
             generate => 1,
-            remove => 1
+            remove => 1,
+            purge => 1
         }
     };
 }

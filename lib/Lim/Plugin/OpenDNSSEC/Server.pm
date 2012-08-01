@@ -3561,9 +3561,55 @@ sub DeleteHsmRemove {
 =cut
 
 sub DeleteHsmPurge {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{hsmutil}) {
+        $self->Error($cb, 'No "ods-hsmutil" executable found or unsupported version, unable to continue');
+        return;
+    }
+
+    my @repositories = ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : ($q->{repository});
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
+        if (my $repository = shift(@repositories)) {
+            my ($stdout, $stderr, $stdin);
+            $stdin = "YES\015";
+            Lim::Util::run_cmd
+                [
+                    'ods-hsmutil', 'purge', $repository->{name}
+                ],
+                '<', \$stdin,
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 30,
+                cb => sub {
+                    unless (defined $self) {
+                        undef($cmd_cb);
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to purge hsm repository ', $repository->{name});
+                        undef($cmd_cb);
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1
