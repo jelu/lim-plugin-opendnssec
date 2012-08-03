@@ -17,7 +17,7 @@ WriteMakefile(
         'Digest::SHA' => 5,
         'Getopt::Long' => 2,
         'Pod::Usage' => 1,
-        'Lim' => 0.1,
+        'Lim' => 0.12,
         'Scalar::Util' => 1
     },
     (! eval { ExtUtils::MakeMaker->VERSION(6.46) } ? () :
