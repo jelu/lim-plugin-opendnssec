@@ -1,3 +1,9 @@
+liblim-plugin-opendnssec-perl (0.12-1~unstable+1) unstable; urgency=low
+
+  * New release using git flow.
+
+ -- Jerry Lundström <lundstrom.jerry@gmail.com>  Fri, 03 Aug 2012 10:51:24 -0700
+
 liblim-plugin-opendnssec-perl (0.102-1) unstable; urgency=low
 
   * Update version for next release.
