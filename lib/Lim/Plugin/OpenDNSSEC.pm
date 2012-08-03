@@ -10,11 +10,11 @@ Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
 
 =head1 VERSION
 
-Version 0.102
+Version 0.12
 
 =cut
 
-our $VERSION = '0.102';
+our $VERSION = '0.12';
 
 =head1 SYNOPSIS
 
