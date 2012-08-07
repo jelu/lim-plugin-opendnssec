@@ -1,7 +1,7 @@
 Name:           perl-Lim-Plugin-OpenDNSSEC
 Version:        0.12
 Release:        1%{?dist}
-Summary:        Lim - Framework for RESTful JSON/XML, JSON-RPC, XML-RPC and SOAP
+Summary:        Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
 
 Group:          Development/Libraries
 License:        GPL+ or Artistic
@@ -17,9 +17,7 @@ BuildRequires:  perl(Test::Simple)
 Requires:  perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 
 %description
-Lim provides a framework for calling plugins over multiple protocols.
-It uses AnyEvent for async operations and SOAP::Lite, XMLRPC::Lite and JSON::XS
-for processing protocol messages.
+...
 
 %package -n perl-Lim-Plugin-OpenDNSSEC-Common
 Summary: Common perl libraries for OpenDNSSEC Lim plugin
