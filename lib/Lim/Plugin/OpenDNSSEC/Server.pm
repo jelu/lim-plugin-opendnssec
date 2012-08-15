@@ -289,25 +289,25 @@ sub _ScanConfig {
         }
         
         foreach my $file (@{$ConfigFiles{$config}}) {
-            if (defined ($file = Lim::Util::FileWritable($file))) {
-                if (exists $file{$file}) {
-                    $file{$file}->{write} = 1;
+            if (defined ($_ = Lim::Util::FileWritable($file))) {
+                if (exists $file{$_}) {
+                    $file{$_}->{write} = 1;
                     next;
                 }
                 
-                $file{$file} = {
-                    name => $file,
+                $file{$_} = {
+                    name => $_,
                     write => 1,
                     read => 1
                 };
             }
-            elsif (defined ($file = Lim::Util::FileReadable($file))) {
-                if (exists $file{$file}) {
+            elsif (defined ($_ = Lim::Util::FileReadable($file))) {
+                if (exists $file{$_}) {
                     next;
                 }
                 
-                $file{$file} = {
-                    name => $file,
+                $file{$_} = {
+                    name => $_,
                     write => 0,
                     read => 1
                 };
