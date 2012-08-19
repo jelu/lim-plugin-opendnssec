@@ -6,6 +6,8 @@ use Lim::Plugin::OpenDNSSEC ();
 
 use base qw(Lim::Component::Client);
 
+=encoding utf8
+
 =head1 NAME
 
 ...

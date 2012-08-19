@@ -4,6 +4,8 @@ use common::sense;
 
 use base qw(Lim::Component);
 
+=encoding utf8
+
 =head1 NAME
 
 Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
