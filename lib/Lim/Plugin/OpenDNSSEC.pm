@@ -696,11 +696,11 @@ used.
 Get the version of the plugin and version of OpenDNSSEC found.
 
   $response = {
-    version => string, # ...
+    version => string, # Version of the plugin
     program => # Single hash or an array of hashes as below:
     {
-      name => string,    # ...
-      version => string, # ...
+      name => string,    # Program name
+      version => string, # Program version
     }
   };
 
@@ -711,9 +711,9 @@ Get a list of all config files that can be managed by this plugin.
   $response = {
     file => # Single hash or an array of hashes as below:
     {
-      name => string,   # ...
-      read => integer,  # ...
-      write => integer, # ...
+      name => string,   # Full path file name
+      read => integer,  # True if readable
+      write => integer, # True if writable
     }
   };
 
@@ -725,8 +725,8 @@ file otherwise there is no response.
   $input = {
     file => # Single hash or an array of hashes as below:
     {
-      content => string, # ...
-      name => string,    # ...
+      name => string,    # Full path file name
+      content => string, # Configuration content
     }
   };
 
@@ -737,15 +737,15 @@ Returns a config file as a content.
   $input = {
     file => # Single hash or an array of hashes as below:
     {
-      name => string, # ...
+      name => string, # Full path file name
     }
   };
 
   $response = {
     file => # Single hash or an array of hashes as below:
     {
-      content => string, # ...
-      name => string,    # ...
+      name => string,    # Full path file name
+      content => string, # Configuration content
     }
   };
 
@@ -776,7 +776,8 @@ otherwise there is no reponse.
 
 =item $client->UpdateControlStart($input, sub { my ($call) = @_; })
 
-...
+Start the specified OpenDNSSEC program (enforcer or signer) or all of them.
+Returns an error if it failed to start otherwise there is no response.
 
   $input = {
     program => # (optional) Single hash or an array of hashes as below:
@@ -787,7 +788,8 @@ otherwise there is no reponse.
 
 =item $client->UpdateControlStop($input, sub { my ($call) = @_; })
 
-...
+Stop the specified OpenDNSSEC program (enforcer or signer) or all of them.
+Returns an error if it failed to stop otherwise there is no response.
 
   $input = {
     program => # (optional) Single hash or an array of hashes as below:
@@ -798,11 +800,14 @@ otherwise there is no reponse.
 
 =item $client->CreateEnforcerSetup(sub { my ($call) = @_; })
 
-...
+Setup the Enforcer database by importing configurations, this will delete any
+existing information. Returns an error if it failed to setup otherwise there is
+no response.
 
 =item $client->UpdateEnforcerUpdate($input, sub { my ($call) = @_; })
 
-...
+Update the specified configuration section (conf, kasp or zonelist) or all of
+them. Returns an error if it failed to update otherwise there is no response.
 
   $input = {
     update => # (optional) Single hash or an array of hashes as below:
@@ -813,7 +818,8 @@ otherwise there is no reponse.
 
 =item $client->CreateEnforcerZone($input, sub { my ($call) = @_; })
 
-...
+Add a new zone into OpenDNSSEC, returns an error if it failed to add the zone
+otherwise there is no response.
 
   $input = {
     zone => # Single hash or an array of hashes as below:
@@ -829,7 +835,7 @@ otherwise there is no reponse.
 
 =item $client->ReadEnforcerZoneList(sub { my ($call) = @_; })
 
-...
+Get a list of zones and related policies.
 
   $response = {
     zone => # Single hash or an array of hashes as below:
@@ -841,7 +847,8 @@ otherwise there is no reponse.
 
 =item $client->DeleteEnforcerZone($input, sub { my ($call) = @_; })
 
-...
+Remove a zone from OpenDNSSEC, returns an error if it failed to remove the zone
+otherwise there is no response.
 
   $input = {
     zone => # Single hash or an array of hashes as below:
@@ -854,7 +861,7 @@ otherwise there is no reponse.
 
 =item $client->ReadEnforcerRepositoryList(sub { my ($call) = @_; })
 
-...
+Get a list of available repositories.
 
   $response = {
     repository => # Single hash or an array of hashes as below:
@@ -867,7 +874,7 @@ otherwise there is no reponse.
 
 =item $client->ReadEnforcerPolicyList(sub { my ($call) = @_; })
 
-...
+Get a list of available policies.
 
   $response = {
     policy => # Single hash or an array of hashes as below:
@@ -879,7 +886,7 @@ otherwise there is no reponse.
 
 =item $client->ReadEnforcerPolicyExport($input, sub { my ($call) = @_; })
 
-...
+Export the specified policy or all. Returns an error if it failed to export.
 
   $input = {
     policy => # (optional) Single hash or an array of hashes as below:
@@ -899,11 +906,12 @@ otherwise there is no reponse.
 
 =item $client->DeleteEnforcerPolicyPurge(sub { my ($call) = @_; })
 
-...
+Undocumented
 
 =item $client->ReadEnforcerKeyList($input, sub { my ($call) = @_; })
 
-...
+Get a list of keys for the specified zone or all. Returns an error if it failed
+to get the list of keys.
 
   $input = {
     verbose => bool, # ... (optional)
@@ -931,7 +939,7 @@ otherwise there is no reponse.
 
 =item $client->ReadEnforcerKeyExport($input, sub { my ($call) = @_; })
 
-...
+Export the specified keys
 
   $input = {
     ds => bool,         # ... (optional)
