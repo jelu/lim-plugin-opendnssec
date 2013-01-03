@@ -485,6 +485,16 @@ sub DeleteConfig {
 
 =cut
 
+sub UpdateControl {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
 sub UpdateControlStart {
     my ($self, $cb, $q) = @_;
     
@@ -676,6 +686,46 @@ sub UpdateControlStop {
             };
         return;
     }
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub CreateEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub ReadEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteEnforcer {
+    my ($self, $cb) = @_;
+
     $self->Successful($cb);
 }
 

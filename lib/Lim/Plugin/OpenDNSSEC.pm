@@ -82,6 +82,9 @@ sub Calls {
             }
         },
         CreateConfig => {
+            uri_map => [
+                'file.name=.+'
+            ],
             in => {
                 file => {
                     '' => 'required',
@@ -91,6 +94,9 @@ sub Calls {
             }
         },
         ReadConfig => {
+            uri_map => [
+                'file.name=.+'
+            ],
             in => {
                 file => {
                     '' => 'required',
@@ -105,6 +111,9 @@ sub Calls {
             }
         },
         UpdateConfig => {
+            uri_map => [
+                'file.name=.+'
+            ],
             in => {
                 file => {
                     '' => 'required',
@@ -114,6 +123,9 @@ sub Calls {
             }
         },
         DeleteConfig => {
+            uri_map => [
+                'file.name=.+'
+            ],
             in => {
                 file => {
                     '' => 'required',
@@ -124,7 +136,16 @@ sub Calls {
         #
         # Calls for ods-control
         #
+        UpdateControl => {
+            uri_map => [
+                'start/program.name=\w+ => UpdateControlStart',
+                'stop/program.name=\w+ => UpdateControlStop'
+            ]
+        },
         UpdateControlStart => {
+            uri_map => [
+                'program.name=\w+'
+            ],
             in => {
                 program => {
                     name => 'string'
@@ -132,11 +153,31 @@ sub Calls {
             }
         },
         UpdateControlStop => {
+            uri_map => [
+                'program.name=\w+'
+            ],
             in => {
                 program => {
                     name => 'string'
                 }
             }
+        },
+        #
+        # Redirect calls for (Create|Read|Update|Delete)Enforcer*
+        #
+        CreateEnforcer => {
+            uri_map => [
+                'setup => CreateEnforcerSetup',
+                'zone/zone.name=[\w\.]+ => CreateEnforcerZone',
+                'key/import/key.zone=[\w\.]+ => CreateEnforcerKeyImport',
+                'database/backup => CreateEnforcerDatabaseBackup'
+            ]
+        },
+        ReadEnforcer => {
+        },
+        UpdateEnforcer => {
+        },
+        DeleteEnforcer => {
         },
         #
         # Call for ods-ksmutil/ods-enforcer setup
