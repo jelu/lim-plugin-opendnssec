@@ -2848,6 +2848,26 @@ sub ReadEnforcerZonelistExport {
 
 =cut
 
+sub ReadSigner {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub UpdateSigner {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
 sub ReadSignerZones {
     my ($self, $cb) = @_;
 
@@ -3328,6 +3348,36 @@ sub UpdateSignerVerbosity {
             }
             $self->Successful($cb);
         };
+}
+
+=head2 function1
+
+=cut
+
+sub CreateHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub ReadHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 function1
+
+=cut
+
+sub DeleteHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
 }
 
 =head2 function1

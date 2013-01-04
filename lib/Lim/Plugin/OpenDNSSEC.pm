@@ -174,10 +174,50 @@ sub Calls {
             ]
         },
         ReadEnforcer => {
+            uri_map => [
+                'zones => ReadEnforcerZoneList',
+                'repositories => ReadEnforcerRepositoryList',
+                'policies => ReadEnforcerPolicyList',
+                'policy/policy.name=\w+/export => ReadEnforcerPolicyExport',
+                'keys => ReadEnforcerKeyList',
+                'zone/zone.name=[\w\.]+/keys => ReadEnforcerKeyList',
+                'key => ReadEnforcerKeyExport',
+                'zone/zone.name=[\w\.]+/key => ReadEnforcerKeyExport',
+                'backups => ReadEnforcerBackupList',
+                'rollovers => ReadEnforcerRolloverList',
+                'zonelist => ReadEnforcerZonelistExport'
+            ]
         },
         UpdateEnforcer => {
+            uri_map => [
+                'update => UpdateEnforcerUpdate',
+                'update/update.section=\w+ => UpdateEnforcerUpdate',
+                'zone/zone.name=[\w\.]+/rollover => UpdateEnforcerKeyRollover',
+                'zone/zone.name=[\w\.]+/key/zone.keytype=\w+/rollover => UpdateEnforcerKeyRollover',
+                'policy/policy.name=[\w\.]+/rollover => UpdateEnforcerKeyRollover',
+                'policy/policy.name=[\w\.]+/key/zone.keytype=\w+/rollover => UpdateEnforcerKeyRollover',
+                'zone/zone.name=[\w\.]+/key/ksk/retire => UpdateEnforcerKeyKskRetire',
+                'zone/zone.name=[\w\.]+/key/zone.cka_id=\w+/retire => UpdateEnforcerKeyKskRetire',
+                'zone/zone.name=[\w\.]+/key/dsseen => UpdateEnforcerKeyDsSeen',
+                'zone/zone.name=[\w\.]+/key/zone.cka_id=\w+/dsseen => UpdateEnforcerKeyDsSeen',
+                'backup/prepare => UpdateEnforcerBackupPrepare',
+                'repository/repository.name=\w+/backup/prepare => UpdateEnforcerBackupPrepare',
+                'backup/commit => UpdateEnforcerBackupCommit',
+                'repository/repository.name=\w+backup/commit => UpdateEnforcerBackupCommit',
+                'backup/rollback => UpdateEnforcerBackupRollback',
+                'repository/repository.name=\w+backup/rollback => UpdateEnforcerBackupRollback',
+                'backup/done => UpdateEnforcerBackupDone',
+                'repository/repository.name=\w+backup/done => UpdateEnforcerBackupDone'
+            ]
         },
         DeleteEnforcer => {
+            uri_map => [
+                'zones => DeleteEnforcerZone zone.all=1',
+                'zone/zone.name=[\w\.]+ => DeleteEnforcerZone',
+                'policies/purge => DeleteEnforcerPolicyPurge',
+                'zone/zone.name=[\w\.]+/purge => DeleteEnforcerKeyPurge',
+                'policy/policy.name=[\w\.]+/purge => DeleteEnforcerKeyPurge'
+            ]
         },
         #
         # Call for ods-ksmutil/ods-enforcer setup
@@ -475,6 +515,29 @@ sub Calls {
             }
         },
         #
+        # Redirect calls for (Create|Read|Update|Delete)Signer*
+        #
+        ReadSigner => {
+            uri_map => [
+                'zones => ReadSignerZones',
+                'zone/zone.name=[\w\.]+ => ReadSignerZones',
+                'queue => ReadSignerQueue',
+                'running => ReadSignerRunning'
+            ]
+        },
+        UpdateSigner => {
+            uri_map => [
+                'sign => UpdateSignerSign',
+                'sign/zone.name=[\w\.]+ => UpdateSignerSign',
+                'clear/zone.name=[\w\.]+ => UpdateSignerClear',
+                'flush => UpdateSignerFlush',
+                'update => UpdateSignerUpdate',
+                'update/zone.name=[\w\.]+ => UpdateSignerUpdate',
+                'reload => UpdateSignerReload',
+                'verbosity/verbosity=\d+ => UpdateSignerVerbosity'
+            ]
+        },
+        #
         # Calls for ods-signer *
         #
         ReadSignerZones => {
@@ -529,6 +592,17 @@ sub Calls {
             in => {
                 verbosity => 'integer'
             }
+        },
+        #
+        # Redirect calls for (Create|Read|Update|Delete)Hsm*
+        #
+        CreateHsm => {
+            # TODO
+        },
+        ReadHsm => {
+            # TODO
+        },
+        DeleteHsm => {
         },
         #
         # Calls for ods-hsmutil *
