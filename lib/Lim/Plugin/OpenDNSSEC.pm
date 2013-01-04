@@ -597,12 +597,18 @@ sub Calls {
         # Redirect calls for (Create|Read|Update|Delete)Hsm*
         #
         CreateHsm => {
-            # TODO
+            'generate => CreateHsmGenerate',
+            'dnskey => CreateHsmDnskey'
         },
         ReadHsm => {
-            # TODO
+            'keys => ReadHsmList',
+            'repository/repository.name=\w+/keys => ReadHsmList',
+            'repository/repository.name=\w+/test => ReadHsmTest',
+            'info => ReadHsmInfo'
         },
         DeleteHsm => {
+            'key/key.id=\w+ => DeleteHsmRemove',
+            'repository/repository.name=\w+/purge => DeleteHsmPurge'
         },
         #
         # Calls for ods-hsmutil *
