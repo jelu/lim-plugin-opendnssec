@@ -20,26 +20,26 @@ our $VERSION = '0.12';
 
 =head1 SYNOPSIS
 
-  use Lim::Plugin::SoftHSM;
+  use Lim::Plugin::OpenDNSSEC;
 
   # Create a Server object
-  $server = Lim::Plugin::SoftHSM->Server;
+  $server = Lim::Plugin::OpenDNSSEC->Server;
 
   # Create a Client object
-  $client = Lim::Plugin::SoftHSM->Client;
+  $client = Lim::Plugin::OpenDNSSEC->Client;
 
   # Create a CLI object
-  $cli = Lim::Plugin::SoftHSM->CLI;
+  $cli = Lim::Plugin::OpenDNSSEC->CLI;
 
 =head1 DESCRIPTION
 
-This plugin lets you manage a SoftHSM installation via Lim.
+This plugin lets you manage a OpenDNSSEC installation via Lim.
 
 =head1 METHODS
 
 =over 4
 
-=item $module_name = Lim::Plugin::SoftHSM->Module
+=item $module_name = Lim::Plugin::OpenDNSSEC->Module
 
 Returns module name.
 
@@ -49,7 +49,17 @@ sub Module {
     'OpenDNSSEC';
 }
 
-=item $call_hash_ref = Lim::Plugin::SoftHSM->Calls
+=item $module_name = Lim::Plugin::OpenDNSSEC->Description
+
+Returns module description.
+
+=cut
+
+sub Description {
+    'This plugin lets you manage a OpenDNSSEC installation via Lim.';
+}
+
+=item $call_hash_ref = Lim::Plugin::OpenDNSSEC->Calls
 
 Returns a hash reference to the calls that can be made to this plugin, used both
 in Server and Client to verify input and output arguments.
@@ -701,7 +711,7 @@ sub Calls {
     };
 }
 
-=item $command_hash_ref = Lim::Plugin::SoftHSM->Commands
+=item $command_hash_ref = Lim::Plugin::OpenDNSSEC->Commands
 
 Returns a hash reference to the CLI commands that can be made by this plugin.
 
@@ -711,7 +721,7 @@ See COMMANDS for list of commands and arguments.
 
 sub Commands {
     {
-        version => [ 'Show version of the plugin and SoftHSM' ],
+        version => [ 'Show version of the plugin and OpenDNSSEC' ],
         configs => [ 'List configuration files' ],
         config => {
             view => [ '<file>', 'Display the content of a configuration file' ],
@@ -1498,7 +1508,7 @@ Export the specified keys
 
 =item version
 
-Show version of the plugin and SoftHSM.
+Show version of the plugin and OpenDNSSEC.
 
 =item configs
 
