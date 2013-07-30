@@ -38,3 +38,9 @@ Depends: ${misc:Depends}, ${perl:Depends}, liblim-cli-perl (= 0.12-1~unstable+1)
 Description: CLI perl libraries for OpenDNSSEC Lim plugin
  CLI perl libraries for controlling a local or remote OpenDNSSEC installation
  via OpenDNSSEC Lim plugin.
+
+Package: lim-management-console-opendnssec
+Architecture: all
+Depends: ${misc:Depends}, lim-management-console-common (= 0.12-1~unstable+1)
+Description: OpenDNSSEC Lim plugin Management Console files
+ OpenDNSSEC Lim plugin Management Console files.
