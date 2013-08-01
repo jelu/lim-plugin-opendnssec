@@ -355,6 +355,7 @@
 		    		}
 		    		
 		    		$('#opendnssec-content option').text('No config files found');
+		    		$('#opendnssec-content .selectpicker').selectpicker('refresh');
 				})
 				.fail(function (jqXHR) {
 					$('#opendnssec-content')
