@@ -23,7 +23,7 @@
 			loadAbout: function () {
 				window.lim.loadPage('/_opendnssec/about.html')
 				.done(function (data) {
-					$('#opendnssec-content').html(data);
+					window.lim.display(data, '#opendnssec-content');
 				});
 			},
 		};
