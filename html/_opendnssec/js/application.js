@@ -456,6 +456,47 @@
 				});
 			},
 			getEnforcerZoneList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_zone_list')
+				.done(function (data) {
+		    		if (data.zone && data.zone.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.zone.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.zone, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.policy)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.zone && data.zone.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.zone.name),
+		    					$('<td></td>').text(data.zone.policy)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No zones found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read zone list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerPolicyList: function () {
@@ -467,6 +508,47 @@
 				});
 			},
 			getEnforcerPolicyList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_policy_list')
+				.done(function (data) {
+		    		if (data.policy && data.policy.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.policy.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.policy, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.description)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.policy && data.policy.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.policy.name),
+		    					$('<td></td>').text(data.policy.description)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No policies found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read policy list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerPolicyExport: function () {
@@ -489,6 +571,95 @@
 				});
 			},
 			getEnforcerKeyList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_key_list', {
+					verbose: true
+				})
+				.done(function (data) {
+		    		if (data.zone && data.zone.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.zone.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.zone, function () {
+			    			if (this.key && this.key.length) {
+				    			var name = this.name;
+			    				$.each(this.key, function () {
+					    			$('#opendnssec-content table tbody').append(
+					    				$('<tr></tr>')
+					    				.append(
+					    					$('<td></td>').text(name),
+					    					$('<td></td>').text(this.type),
+					    					$('<td></td>').text(this.state),
+					    					$('<td></td>').text(this.next_transaction),
+					    					$('<td></td>').text(this.cka_id),
+					    					$('<td></td>').text(this.repository),
+					    					$('<td></td>').text(this.keytag)
+				    					));
+			    				});
+			    			}
+			    			else if (this.key && this.key.type) {
+				    			$('#opendnssec-content table tbody').append(
+				    				$('<tr></tr>')
+				    				.append(
+				    					$('<td></td>').text(this.name),
+				    					$('<td></td>').text(this.key.type),
+				    					$('<td></td>').text(this.key.state),
+				    					$('<td></td>').text(this.key.next_transaction),
+				    					$('<td></td>').text(this.key.cka_id),
+				    					$('<td></td>').text(this.key.repository),
+				    					$('<td></td>').text(this.key.keytag)
+			    					));
+			    			}
+			    		});
+			    		return;
+		    		}
+		    		else if (data.zone && data.zone.name) {
+		    			$('#opendnssec-content table tbody').empty();
+
+		    			if (data.zone.key && data.zone.key.length) {
+			    			var name = this.name;
+		    				$.each(this.key, function () {
+				    			$('#opendnssec-content table tbody').append(
+				    				$('<tr></tr>')
+				    				.append(
+				    					$('<td></td>').text(name),
+				    					$('<td></td>').text(this.type),
+				    					$('<td></td>').text(this.state),
+				    					$('<td></td>').text(this.next_transaction),
+				    					$('<td></td>').text(this.cka_id),
+				    					$('<td></td>').text(this.repository),
+				    					$('<td></td>').text(this.keytag)
+			    					));
+		    				});
+		    			}
+		    			else if (data.zone.key && data.zone.key.type) {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(data.zone.name),
+			    					$('<td></td>').text(data.zone.key.type),
+			    					$('<td></td>').text(data.zone.key.state),
+			    					$('<td></td>').text(data.zone.key.next_transaction),
+			    					$('<td></td>').text(data.zone.key.cka_id),
+			    					$('<td></td>').text(data.zone.key.repository),
+			    					$('<td></td>').text(data.zone.key.keytag)
+		    					));
+		    			}
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No keys found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read key list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerBackupList: function () {
@@ -511,6 +682,49 @@
 				});
 			},
 			getEnforcerRolloverList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_rollover_list')
+				.done(function (data) {
+		    		if (data.zone && data.zone.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.zone.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.zone, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.keytype),
+			    					$('<td></td>').text(this.rollover_expected)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.zone && data.zone.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.zone.name),
+		    					$('<td></td>').text(data.zone.keytype),
+		    					$('<td></td>').text(data.zone.rollover_expected)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No rollovers found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read rollover list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerUpdate: function () {
