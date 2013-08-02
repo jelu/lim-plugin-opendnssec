@@ -370,6 +370,7 @@
 			// CONTROL
 			//
 			loadControlStart: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/control_start.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -380,6 +381,7 @@
 			},
 			//
 			loadControlStop: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/control_stop.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -392,6 +394,7 @@
 			// ENFORCER
 			//
 			loadEnforcerRepositoryList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_repository_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -399,9 +402,53 @@
 				});
 			},
 			getEnforcerRepositoryList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_repository_list')
+				.done(function (data) {
+		    		if (data.repository && data.repository.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.repository.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.repository, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.capacity),
+			    					$('<td></td>').text(this.require_backup ? 'Yes' : 'No')
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.repository && data.repository.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.repository.name),
+		    					$('<td></td>').text(data.repository.capacity),
+		    					$('<td></td>').text(data.repository.require_backup ? 'Yes' : 'No')
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No repositories found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read repository list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerZoneList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_zone_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -412,6 +459,7 @@
 			},
 			//
 			loadEnforcerPolicyList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_policy_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -422,6 +470,7 @@
 			},
 			//
 			loadEnforcerPolicyExport: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_policy_export.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -432,6 +481,7 @@
 			},
 			//
 			loadEnforcerKeyList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_key_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -442,6 +492,7 @@
 			},
 			//
 			loadEnforcerBackupList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_backup_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -452,6 +503,7 @@
 			},
 			//
 			loadEnforcerRolloverList: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_rollover_list.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -462,6 +514,7 @@
 			},
 			//
 			loadEnforcerUpdate: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/enforcer_update.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -474,6 +527,7 @@
 			// SIGNER
 			//
 			loadSignerZones: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_zones.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -484,6 +538,7 @@
 			},
 			//
 			loadSignerSign: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_sign.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -494,6 +549,7 @@
 			},
 			//
 			loadSignerClear: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_clear.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -504,6 +560,7 @@
 			},
 			//
 			loadSignerQueue: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_queue.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -514,6 +571,7 @@
 			},
 			//
 			loadSignerFlush: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_flush.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -524,6 +582,7 @@
 			},
 			//
 			loadSignerUpdate: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/signer_update.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
@@ -536,6 +595,7 @@
 			// HSM
 			//
 			loadHsmInfo: function () {
+				var that = this;
 				window.lim.loadPage('/_opendnssec/hsm_info.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
