@@ -1,1 +1,23 @@
-<h2>Not Implemented</h2>
+<h2>Clear Zone Data from Signer</h2>
+<form>
+  <fieldset>
+    <legend>Enter a zone to clear its data from the Signer</legend>
+    <label>Zone</label>
+    <input id="zone" type="text" placeholder="Enter zone..." required />
+    <span class="help-block">The zone to clear.</span>
+    <button id="submit" type="submit" class="btn btn-primary btn-danger">Clear Zone</button>
+  </fieldset>
+</form>
+<div id="clearZone" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="clearZoneLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="clearZoneLabel">Confirm Zone Clear</h3>
+  </div>
+  <div class="modal-body">
+    <p>Are you sure you want to clear zone <span id="zoneName"></span> from the Signer?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <button class="btn btn-primary btn-danger">Clear</button>
+  </div>
+</div>

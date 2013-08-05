@@ -836,18 +836,71 @@
 				window.lim.loadPage('/_opendnssec/signer_sign.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
-					that.getSignerSign();
+		    		$('#opendnssec-content form').submit(function () {
+		    			var zone = $('#zone').val();
+	    				$('#opendnssec-content form').remove();
+	    				$('#opendnssec-content').append(
+	    					$('<p></p>').append(
+	    						$('<i></i>')
+	    						.text('Signing zone '+zone+' ...')
+    						));
+	    				window.lim.postJSON('/opendnssec/signer_sign', {
+	    					zone: {
+	    						name: zone
+	    					}
+	    				})
+	    				.done(function (data) {
+							$('#opendnssec-content p')
+							.text('Signed zone '+zone+' successfully')
+							.addClass('text-success');
+	    				})
+						.fail(function (jqXHR) {
+							$('#opendnssec-content p')
+							.text('Unable to sign zone '+zone+': '+window.lim.getXHRError(jqXHR))
+							.addClass('text-error');
+						});
+		    		});
 				});
 			},
 			getSignerSign: function () {
 			},
 			//
 			loadSignerClear: function () {
-				var that = this;
+				var that = this,
+					zone;
 				window.lim.loadPage('/_opendnssec/signer_clear.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
-					that.getSignerClear();
+		    		$('#opendnssec-content form').submit(function () {
+		    			zone = $('#zone').val();
+	    				$('#opendnssec-content #zoneName').text(zone);
+	    				$('#clearZone').modal('show');
+	    				return false;
+		    		});
+		    		$('#clearZone button.btn-primary').click(function () {
+	    				$('#opendnssec-content form').remove();
+	    				$('#opendnssec-content').append(
+	    					$('<p></p>').append(
+	    						$('<i></i>')
+	    						.text('Clearing zone '+zone+' from the Signer ...')
+    						));
+		    			$('#clearZone').modal('hide');
+	    				window.lim.postJSON('/opendnssec/signer_clear', {
+	    					zone: {
+	    						name: zone
+	    					}
+	    				})
+	    				.done(function (data) {
+							$('#opendnssec-content p')
+							.text('Cleared zone '+zone+' from the Signer successfully')
+							.addClass('text-success');
+	    				})
+						.fail(function (jqXHR) {
+							$('#opendnssec-content p')
+							.text('Unable to clear zone '+zone+': '+window.lim.getXHRError(jqXHR))
+							.addClass('text-error');
+						});
+		    		});
 				});
 			},
 			getSignerClear: function () {
@@ -862,6 +915,52 @@
 				});
 			},
 			getSignerQueue: function () {
+				window.lim.getJSON('/opendnssec/signer_queue')
+				.done(function (data) {
+					if (data.now) {
+						$('#signerDateTime').text(data.now);
+					}
+		    		if (data.task && data.task.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.task.sort(function (a, b) {
+			    			return (a.date > b.date) ? 1 : ((a.date < b.date) ? -1 : 0);
+			    		});
+
+			    		$.each(data.task, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.date),
+			    					$('<td></td>').text(this.type),
+			    					$('<td></td>').text(this.zone)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.task && data.task.date) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.task.date),
+		    					$('<td></td>').text(data.task.type),
+		    					$('<td></td>').text(data.task.zone)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No tasks in queue found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read queue: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadSignerFlush: function () {
@@ -869,7 +968,30 @@
 				window.lim.loadPage('/_opendnssec/signer_flush.html')
 				.done(function (data) {
 					window.lim.display(data, '#opendnssec-content');
-					that.getSignerFlush();
+		    		$('#opendnssec-content form').submit(function () {
+	    				$('#flushQueue').modal('show');
+	    				return false;
+		    		});
+		    		$('#flushQueue button.btn-primary').click(function () {
+	    				$('#opendnssec-content form').remove();
+	    				$('#opendnssec-content').append(
+	    					$('<p></p>').append(
+	    						$('<i></i>')
+	    						.text('Flushing signer queue ...')
+    						));
+		    			$('#flushQueue').modal('hide');
+	    				window.lim.postJSON('/opendnssec/signer_flush')
+	    				.done(function (data) {
+							$('#opendnssec-content p')
+							.text('Flushed signer queue successfully')
+							.addClass('text-success');
+	    				})
+						.fail(function (jqXHR) {
+							$('#opendnssec-content p')
+							.text('Unable to flush signer queue: '+window.lim.getXHRError(jqXHR))
+							.addClass('text-error');
+						});
+		    		});
 				});
 			},
 			getSignerFlush: function () {

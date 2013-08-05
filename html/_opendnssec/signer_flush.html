@@ -1,1 +1,19 @@
-<h2>Not Implemented</h2>
+<h2>Flush Signer Queue</h2>
+<form>
+  <fieldset>
+    <button id="submit" type="submit" class="btn btn-primary">Flush Queue</button>
+  </fieldset>
+</form>
+<div id="flushQueue" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="flushQueueLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="flushQueueLabel">Confirm Queue Flush</h3>
+  </div>
+  <div class="modal-body">
+    <p>Are you sure you want to flush the signer queue?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <button class="btn btn-primary">Flush</button>
+  </div>
+</div>
