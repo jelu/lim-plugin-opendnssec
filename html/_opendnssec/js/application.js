@@ -671,6 +671,47 @@
 				});
 			},
 			getEnforcerBackupList: function () {
+				window.lim.getJSON('/opendnssec/enforcer_backup_list')
+				.done(function (data) {
+		    		if (data.repository && data.repository.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.repository.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.repository, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.unbacked_up_keys)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.repository && data.repository.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.repository.name),
+		    					$('<td></td>').text(data.repository.unbacked_up_keys)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No backup list found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read backup list: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadEnforcerRolloverList: function () {
@@ -749,6 +790,45 @@
 				});
 			},
 			getSignerZones: function () {
+				window.lim.getJSON('/opendnssec/signer_zones')
+				.done(function (data) {
+		    		if (data.zone && data.zone.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.zone.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.zone, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.zone && data.zone.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.zone.name)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No zones found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read zones: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 			//
 			loadSignerSign: function () {
@@ -817,6 +897,57 @@
 				});
 			},
 			getHsmInfo: function () {
+				window.lim.getJSON('/opendnssec/hsm_info')
+				.done(function (data) {
+		    		if (data.repository && data.repository.length) {
+		    			$('#opendnssec-content table tbody').empty();
+		    			
+			    		data.repository.sort(function (a, b) {
+			    			return (a.name > b.name) ? 1 : ((a.name < b.name) ? -1 : 0);
+			    		});
+
+			    		$.each(data.repository, function () {
+			    			$('#opendnssec-content table tbody').append(
+			    				$('<tr></tr>')
+			    				.append(
+			    					$('<td></td>').text(this.name),
+			    					$('<td></td>').text(this.manufacturer),
+			    					$('<td></td>').text(this.model),
+			    					$('<td></td>').text(this.token_label),
+			    					$('<td></td>').text(this.slot),
+			    					$('<td></td>').text(this.serial),
+			    					$('<td></td>').text(this.module)
+		    					));
+			    		});
+			    		return;
+		    		}
+		    		else if (data.repository && data.repository.name) {
+		    			$('#opendnssec-content table tbody')
+		    			.empty()
+		    			.append(
+		    				$('<tr></tr>')
+		    				.append(
+		    					$('<td></td>').text(data.repository.name),
+		    					$('<td></td>').text(data.repository.manufacturer),
+		    					$('<td></td>').text(data.repository.model),
+		    					$('<td></td>').text(data.repository.token_label),
+		    					$('<td></td>').text(data.repository.slot),
+		    					$('<td></td>').text(data.repository.serial),
+		    					$('<td></td>').text(data.repository.module)
+	    					));
+		    			return;
+		    		}
+		    		
+		    		$('#opendnssec-content table td i').text('No zones found');
+				})
+				.fail(function (jqXHR) {
+					$('#opendnssec-content')
+					.empty()
+					.append(
+						$('<p class="text-error"></p>')
+						.text('Unable to read zones: '+window.lim.getXHRError(jqXHR))
+						);
+				});
 			},
 		};
 		window.lim.module.opendnssec.init();
