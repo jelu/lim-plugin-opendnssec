@@ -1,6 +1,6 @@
 (function ($) {
 	$(function () {
-		window.lim.module.opendnssec = {
+		window.lim.plugin.opendnssec = {
 			init: function () {
 				var that = this;
 				
@@ -210,7 +210,7 @@
 			    		return;
 		    		}
 		    		
-		    		$('#opendnssec-content table td i').text('No modules found, this is a bit strange ...');
+		    		$('#opendnssec-content table td i').text('Unable to retrieve system information: unknown error.');
 				})
 				.fail(function () {
 					$('#opendnssec-version i').text('failed');
@@ -1072,6 +1072,6 @@
 				});
 			},
 		};
-		window.lim.module.opendnssec.init();
+		window.lim.plugin.opendnssec.init();
 	});
 })(window.jQuery);

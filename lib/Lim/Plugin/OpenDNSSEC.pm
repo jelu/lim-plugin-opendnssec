@@ -39,19 +39,19 @@ This plugin lets you manage a OpenDNSSEC installation via Lim.
 
 =over 4
 
-=item $module_name = Lim::Plugin::OpenDNSSEC->Module
+=item $plugin_name = Lim::Plugin::OpenDNSSEC->Name
 
-Returns module name.
+Returns the plugin's name.
 
 =cut
 
-sub Module {
+sub Name {
     'OpenDNSSEC';
 }
 
-=item $module_name = Lim::Plugin::OpenDNSSEC->Description
+=item $plugin_description = Lim::Plugin::OpenDNSSEC->Description
 
-Returns module description.
+Returns the plugin's description.
 
 =cut
 
