@@ -9,6 +9,8 @@ use Lim::Plugin::OpenDNSSEC ();
 
 use base qw(Lim::Component::CLI);
 
+=encoding utf8
+
 =head1 NAME
 
 ...
@@ -27,7 +29,7 @@ our $VERSION = $Lim::Plugin::OpenDNSSEC::VERSION;
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 version
 
 =cut
 
@@ -61,7 +63,7 @@ sub version {
     });
 }
 
-=head2 function1
+=head2 configs
 
 =cut
 
@@ -98,7 +100,7 @@ sub configs {
     });
 }
 
-=head2 function1
+=head2 config
 
 =cut
 
@@ -212,7 +214,7 @@ sub config {
     $self->Error;
 }
 
-=head2 function1
+=head2 start
 
 =cut
 
@@ -302,7 +304,7 @@ sub start {
     $self->Error;
 }
 
-=head2 function1
+=head2 stop
 
 =cut
 
@@ -392,7 +394,7 @@ sub stop {
     $self->Error;
 }
 
-=head2 function1
+=head2 setup
 
 =cut
 
@@ -420,7 +422,7 @@ sub setup {
     });
 }
 
-=head2 function1
+=head2 update
 
 =cut
 
@@ -484,7 +486,7 @@ sub update {
     $self->Error;
 }
 
-=head2 function1
+=head2 zone
 
 =cut
 
@@ -590,7 +592,7 @@ sub zone {
     $self->Error;
 }
 
-=head2 function1
+=head2 repository
 
 =cut
 
@@ -637,7 +639,7 @@ sub repository {
     $self->Error;
 }
 
-=head2 function1
+=head2 policy
 
 =cut
 
@@ -749,7 +751,7 @@ sub policy {
     $self->Error;
 }
 
-=head2 function1
+=head2 key
 
 =cut
 
@@ -1201,7 +1203,7 @@ sub key {
     $self->Error;
 }
 
-=head2 function1
+=head2 backup
 
 =cut
 
@@ -1566,7 +1568,7 @@ sub backup {
     $self->Error;
 }
 
-=head2 function1
+=head2 rollover
 
 =cut
 
@@ -1665,7 +1667,7 @@ sub rollover {
     $self->Error;
 }
 
-=head2 function1
+=head2 database
 
 =cut
 
@@ -1703,7 +1705,7 @@ sub database {
     $self->Error;
 }
 
-=head2 function1
+=head2 zonelist
 
 =cut
 
@@ -1747,7 +1749,7 @@ sub zonelist {
     $self->Error;
 }
 
-=head2 function1
+=head2 signer
 
 =cut
 
@@ -2076,7 +2078,7 @@ sub signer {
     $self->Error;
 }
 
-=head2 function1
+=head2 hsm
 
 =cut
 
@@ -2415,7 +2417,7 @@ L<https://github.com/jelu/lim-plugin-opendnssec/issues>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2012 Jerry Lundström.
+Copyright 2012-2013 Jerry Lundström.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

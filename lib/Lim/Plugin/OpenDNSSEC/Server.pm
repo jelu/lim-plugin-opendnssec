@@ -13,6 +13,8 @@ use Lim::Util ();
 
 use base qw(Lim::Component::Server);
 
+=encoding utf8
+
 =head1 NAME
 
 ...
@@ -20,6 +22,14 @@ use base qw(Lim::Component::Server);
 =head1 VERSION
 
 See L<Lim::Plugin::OpenDNSSEC> for version.
+
+=over 4
+
+=item OPENDNSSEC_VERSION_MIN
+
+=item OPENDNSSEC_VERSION_MAX
+
+=back
 
 =cut
 
@@ -56,7 +66,7 @@ sub OPENDNSSEC_VERSION_MAX (){ 1004000 }
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 Init
 
 =cut
 
@@ -258,14 +268,14 @@ sub Init {
     $self->{version} = $version;
 }
 
-=head2 function1
+=head2 Destroy
 
 =cut
 
 sub Destroy {
 }
 
-=head2 function1
+=head2 _ScanConfig
 
 =cut
 
@@ -289,25 +299,25 @@ sub _ScanConfig {
         }
         
         foreach my $file (@{$ConfigFiles{$config}}) {
-            if (defined ($file = Lim::Util::FileWritable($file))) {
-                if (exists $file{$file}) {
-                    $file{$file}->{write} = 1;
+            if (defined ($_ = Lim::Util::FileWritable($file))) {
+                if (exists $file{$_}) {
+                    $file{$_}->{write} = 1;
                     next;
                 }
                 
-                $file{$file} = {
-                    name => $file,
+                $file{$_} = {
+                    name => $_,
                     write => 1,
                     read => 1
                 };
             }
-            elsif (defined ($file = Lim::Util::FileReadable($file))) {
-                if (exists $file{$file}) {
+            elsif (defined ($_ = Lim::Util::FileReadable($file))) {
+                if (exists $file{$_}) {
                     next;
                 }
                 
-                $file{$file} = {
-                    name => $file,
+                $file{$_} = {
+                    name => $_,
                     write => 0,
                     read => 1
                 };
@@ -318,7 +328,7 @@ sub _ScanConfig {
     return \%file;
 }
 
-=head2 function1
+=head2 ReadVersion
 
 =cut
 
@@ -338,7 +348,7 @@ sub ReadVersion {
     }
 }
 
-=head2 function1
+=head2 ReadConfigs
 
 =cut
 
@@ -351,7 +361,7 @@ sub ReadConfigs {
     });
 }
 
-=head2 function1
+=head2 CreateConfig
 
 =cut
 
@@ -361,7 +371,7 @@ sub CreateConfig {
     $self->Error($cb, 'Not Implemented');
 }
 
-=head2 function1
+=head2 ReadConfig
 
 =cut
 
@@ -409,7 +419,7 @@ sub ReadConfig {
     $self->Successful($cb, $result);
 }
 
-=head2 function1
+=head2 UpdateConfig
 
 =cut
 
@@ -469,7 +479,7 @@ sub UpdateConfig {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 DeleteConfig
 
 =cut
 
@@ -479,7 +489,17 @@ sub DeleteConfig {
     $self->Error($cb, 'Not Implemented');
 }
 
-=head2 function1
+=head2 UpdateControl
+
+=cut
+
+sub UpdateControl {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 UpdateControlStart
 
 =cut
 
@@ -578,7 +598,7 @@ sub UpdateControlStart {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 UpdateControlStop
 
 =cut
 
@@ -677,7 +697,47 @@ sub UpdateControlStop {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 CreateEnforcer
+
+=cut
+
+sub CreateEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 ReadEnforcer
+
+=cut
+
+sub ReadEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 UpdateEnforcer
+
+=cut
+
+sub UpdateEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 DeleteEnforcer
+
+=cut
+
+sub DeleteEnforcer {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 CreateEnforcerSetup
 
 =cut
 
@@ -715,7 +775,7 @@ sub CreateEnforcerSetup {
         };
 }
 
-=head2 function1
+=head2 UpdateEnforcerUpdate
 
 =cut
 
@@ -820,7 +880,7 @@ sub UpdateEnforcerUpdate {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 CreateEnforcerZone
 
 =cut
 
@@ -885,7 +945,7 @@ sub CreateEnforcerZone {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 ReadEnforcerZoneList
 
 =cut
 
@@ -941,7 +1001,7 @@ sub ReadEnforcerZoneList {
         };
 }
 
-=head2 function1
+=head2 DeleteEnforcerZone
 
 =cut
 
@@ -1040,7 +1100,7 @@ sub DeleteEnforcerZone {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 ReadEnforcerRepositoryList
 
 =cut
 
@@ -1104,7 +1164,7 @@ sub ReadEnforcerRepositoryList {
         };
 }
 
-=head2 function1
+=head2 ReadEnforcerPolicyList
 
 =cut
 
@@ -1167,7 +1227,7 @@ sub ReadEnforcerPolicyList {
         };
 }
 
-=head2 function1
+=head2 ReadEnforcerPolicyExport
 
 =cut
 
@@ -1261,7 +1321,7 @@ sub ReadEnforcerPolicyExport {
     }
 }
 
-=head2 function1
+=head2 DeleteEnforcerPolicyPurge
 
 =cut
 
@@ -1271,7 +1331,7 @@ sub DeleteEnforcerPolicyPurge {
     $self->Error($cb, 'Not Implemented: function experimental');
 }
 
-=head2 function1
+=head2 ReadEnforcerKeyList
 
 =cut
 
@@ -1425,7 +1485,7 @@ sub ReadEnforcerKeyList {
     }
 }
 
-=head2 function1
+=head2 ReadEnforcerKeyExport
 
 =cut
 
@@ -1567,7 +1627,7 @@ sub ReadEnforcerKeyExport {
     }
 }
 
-=head2 function1
+=head2 CreateEnforcerKeyImport
 
 =cut
 
@@ -1632,7 +1692,7 @@ sub CreateEnforcerKeyImport {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 UpdateEnforcerKeyRollover
 
 =cut
 
@@ -1733,7 +1793,7 @@ sub UpdateEnforcerKeyRollover {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 DeleteEnforcerKeyPurge
 
 =cut
 
@@ -1864,7 +1924,7 @@ sub DeleteEnforcerKeyPurge {
     $self->Successful($cb);
 }
 
-=head2 function1
+=head2 CreateEnforcerKeyGenerate
 
 =cut
 
@@ -1945,7 +2005,7 @@ sub CreateEnforcerKeyGenerate {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 UpdateEnforcerKeyKskRetire
 
 =cut
 
@@ -2013,7 +2073,7 @@ sub UpdateEnforcerKeyKskRetire {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 UpdateEnforcerKeyDsSeen
 
 =cut
 
@@ -2076,7 +2136,7 @@ sub UpdateEnforcerKeyDsSeen {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 UpdateEnforcerBackupPrepare
 
 =cut
 
@@ -2161,7 +2221,7 @@ sub UpdateEnforcerBackupPrepare {
     }
 }
 
-=head2 function1
+=head2 UpdateEnforcerBackupCommit
 
 =cut
 
@@ -2246,7 +2306,7 @@ sub UpdateEnforcerBackupCommit {
     }
 }
 
-=head2 function1
+=head2 UpdateEnforcerBackupRollback
 
 =cut
 
@@ -2331,7 +2391,7 @@ sub UpdateEnforcerBackupRollback {
     }
 }
 
-=head2 function1
+=head2 UpdateEnforcerBackupDone
 
 =cut
 
@@ -2416,7 +2476,7 @@ sub UpdateEnforcerBackupDone {
     }
 }
 
-=head2 function1
+=head2 ReadEnforcerBackupList
 
 =cut
 
@@ -2576,7 +2636,7 @@ sub ReadEnforcerBackupList {
     }
 }
 
-=head2 function1
+=head2 ReadEnforcerRolloverList
 
 =cut
 
@@ -2716,7 +2776,7 @@ sub ReadEnforcerRolloverList {
     }
 }
 
-=head2 function1
+=head2 CreateEnforcerDatabaseBackup
 
 =cut
 
@@ -2754,7 +2814,7 @@ sub CreateEnforcerDatabaseBackup {
         };
 }
 
-=head2 function1
+=head2 ReadEnforcerZonelistExport
 
 =cut
 
@@ -2792,7 +2852,27 @@ sub ReadEnforcerZonelistExport {
         };
 }
 
-=head2 function1
+=head2 ReadSigner
+
+=cut
+
+sub ReadSigner {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 UpdateSigner
+
+=cut
+
+sub UpdateSigner {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 ReadSignerZones
 
 =cut
 
@@ -2847,7 +2927,7 @@ sub ReadSignerZones {
         };
 }
 
-=head2 function1
+=head2 UpdateSignerSign
 
 =cut
 
@@ -2931,7 +3011,7 @@ sub UpdateSignerSign {
     }
 }
 
-=head2 function1
+=head2 UpdateSignerClear
 
 =cut
 
@@ -2986,7 +3066,7 @@ sub UpdateSignerClear {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 ReadSignerQueue
 
 =cut
 
@@ -3046,7 +3126,7 @@ sub ReadSignerQueue {
         };
 }
 
-=head2 function1
+=head2 UpdateSignerFlush
 
 =cut
 
@@ -3082,7 +3162,7 @@ sub UpdateSignerFlush {
         };
 }
 
-=head2 function1
+=head2 UpdateSignerUpdate
 
 =cut
 
@@ -3166,7 +3246,7 @@ sub UpdateSignerUpdate {
     }
 }
 
-=head2 function1
+=head2 ReadSignerRunning
 
 =cut
 
@@ -3206,7 +3286,7 @@ sub ReadSignerRunning {
         };
 }
 
-=head2 function1
+=head2 UpdateSignerReload
 
 =cut
 
@@ -3242,7 +3322,7 @@ sub UpdateSignerReload {
         };
 }
 
-=head2 function1
+=head2 UpdateSignerVerbosity
 
 =cut
 
@@ -3278,7 +3358,37 @@ sub UpdateSignerVerbosity {
         };
 }
 
-=head2 function1
+=head2 CreateHsm
+
+=cut
+
+sub CreateHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 ReadHsm
+
+=cut
+
+sub ReadHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 DeleteHsm
+
+=cut
+
+sub DeleteHsm {
+    my ($self, $cb) = @_;
+
+    $self->Successful($cb);
+}
+
+=head2 ReadHsmList
 
 =cut
 
@@ -3419,7 +3529,7 @@ sub ReadHsmList {
     }
 }
 
-=head2 function1
+=head2 CreateHsmGenerate
 
 =cut
 
@@ -3501,7 +3611,7 @@ sub CreateHsmGenerate {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 DeleteHsmRemove
 
 =cut
 
@@ -3556,7 +3666,7 @@ sub DeleteHsmRemove {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 DeleteHsmPurge
 
 =cut
 
@@ -3612,7 +3722,7 @@ sub DeleteHsmPurge {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 CreateHsmDnskey
 
 =cut
 
@@ -3682,7 +3792,7 @@ sub CreateHsmDnskey {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 ReadHsmTest
 
 =cut
 
@@ -3737,7 +3847,7 @@ sub ReadHsmTest {
     $cmd_cb->();
 }
 
-=head2 function1
+=head2 ReadHsmInfo
 
 =cut
 
@@ -3865,7 +3975,7 @@ L<https://github.com/jelu/lim-plugin-opendnssec/issues>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2012 Jerry Lundström.
+Copyright 2012-2013 Jerry Lundström.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
