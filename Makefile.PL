@@ -19,7 +19,7 @@ WriteMakefile(
             'Digest::SHA' => 5,
             'Getopt::Long' => 2,
             'Pod::Usage' => 1,
-            'Lim' => 0.12,
+            'Lim' => 0.16,
             'Scalar::Util' => 1
         },
         PREREQ_PM => {
@@ -27,7 +27,7 @@ WriteMakefile(
             'Digest::SHA' => 5,
             'Getopt::Long' => 2,
             'Pod::Usage' => 1,
-            'Lim' => 0.12,
+            'Lim' => 0.16,
             'Scalar::Util' => 1
         }
     ) : (
@@ -37,7 +37,7 @@ WriteMakefile(
             'Digest::SHA' => 5,
             'Getopt::Long' => 2,
             'Pod::Usage' => 1,
-            'Lim' => 0.12,
+            'Lim' => 0.16,
             'Scalar::Util' => 1
         }
     )),
