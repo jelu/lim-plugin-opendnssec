@@ -1,5 +1,5 @@
 Name:           perl-Lim-Plugin-OpenDNSSEC
-Version:        0.13
+Version:        0.14
 Release:        1%{?dist}
 Summary:        Lim::Plugin::OpenDNSSEC - OpenDNSSEC management plugin for Lim
 
@@ -23,28 +23,28 @@ This plugin lets you manage a OpenDNSSEC installation via Lim.
 %package -n perl-Lim-Plugin-OpenDNSSEC-Common
 Summary: Common perl libraries for OpenDNSSEC Lim plugin
 Group: Development/Libraries
-Version: 0.13
+Version: 0.14
 %description -n perl-Lim-Plugin-OpenDNSSEC-Common
 Common perl libraries for OpenDNSSEC Lim plugin.
 
 %package -n perl-Lim-Plugin-OpenDNSSEC-Server
 Summary: Server perl libraries for OpenDNSSEC Lim plugin
 Group: Development/Libraries
-Version: 0.13
+Version: 0.14
 %description -n perl-Lim-Plugin-OpenDNSSEC-Server
 Server perl libraries for OpenDNSSEC Lim plugin.
 
 %package -n perl-Lim-Plugin-OpenDNSSEC-Client
 Summary: Client perl libraries for OpenDNSSEC Lim plugin
 Group: Development/Libraries
-Version: 0.13
+Version: 0.14
 %description -n perl-Lim-Plugin-OpenDNSSEC-Client
 Client perl libraries for communicating with the OpenDNSSEC Lim plugin.
 
 %package -n perl-Lim-Plugin-OpenDNSSEC-CLI
 Summary: CLI perl libraries for OpenDNSSEC Lim plugin
 Group: Development/Libraries
-Version: 0.13
+Version: 0.14
 %description -n perl-Lim-Plugin-OpenDNSSEC-CLI
 CLI perl libraries for controlling a local or remote OpenDNSSEC installation
 via OpenDNSSEC Lim plugin.
@@ -53,7 +53,7 @@ via OpenDNSSEC Lim plugin.
 Requires: lim-management-console-common >= 0.16
 Summary: OpenDNSSEC Lim plugin Management Console files
 Group: Development/Libraries
-Version: 0.13
+Version: 0.14
 %description -n lim-management-console-opendnssec
 OpenDNSSEC Lim plugin Management Console files.
 
@@ -155,6 +155,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Aug 08 2013 Jerry Lundström < lundstrom.jerry at gmail.com > - 0.14-1
+- Release 0.14
 * Wed Aug 07 2013 Jerry Lundström < lundstrom.jerry at gmail.com > - 0.13-1
 - Release 0.13
 * Tue Aug 07 2012 Jerry Lundström < lundstrom.jerry at gmail.com > - 0.12-1
