@@ -16,3 +16,4 @@ pm_to_blib
 .lwpcookies
 pod2htm*.tmp
 Lim-Plugin-OpenDNSSEC-*
+MYMETA.json
