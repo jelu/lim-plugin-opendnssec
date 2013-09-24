@@ -1,0 +1,2 @@
+- pkg: adduser lim-agentd opendnssec
+- pkg: chmod g+w /etc/opendnssec/*
