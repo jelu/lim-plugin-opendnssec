@@ -93,6 +93,7 @@ sub Init {
     if ($cv->recv) {
         if ($stderr =~ /usage:\s+ods-control/o) {
             $self->{bin}->{control} = 1;
+            $self->{bin_version}->{control} = 1;
         }
         else {
             $self->{logger}->warn('Unable to find "ods-control" executable, module functions limited');
