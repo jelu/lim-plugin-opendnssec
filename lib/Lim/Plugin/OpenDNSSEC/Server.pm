@@ -5,7 +5,8 @@ use common::sense;
 use Fcntl qw(:seek);
 use IO::File ();
 use Digest::SHA ();
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken blessed);
+use XML::LibXML ();
 
 use Lim::Plugin::OpenDNSSEC ();
 
@@ -281,7 +282,7 @@ sub Destroy {
 =cut
 
 sub _ScanConfig {
-    my ($self) = @_;
+    my ($self, $not_index_fullpath) = @_;
     my %file;
     
     foreach my $config (keys %ConfigFiles) {
@@ -301,24 +302,36 @@ sub _ScanConfig {
         
         foreach my $file (@{$ConfigFiles{$config}}) {
             if (defined ($_ = Lim::Util::FileWritable($file))) {
+                my $name = $_;
+                
+                if ($not_index_fullpath) {
+                    $_ = $config;
+                }
+
                 if (exists $file{$_}) {
                     $file{$_}->{write} = 1;
                     next;
                 }
                 
                 $file{$_} = {
-                    name => $_,
+                    name => $name,
                     write => 1,
                     read => 1
                 };
             }
             elsif (defined ($_ = Lim::Util::FileReadable($file))) {
+                my $name = $_;
+                
+                if ($not_index_fullpath) {
+                    $_ = $config;
+                }
+
                 if (exists $file{$_}) {
                     next;
                 }
                 
                 $file{$_} = {
-                    name => $_,
+                    name => $name,
                     write => 0,
                     read => 1
                 };
@@ -487,6 +500,411 @@ sub UpdateConfig {
 sub DeleteConfig {
     my ($self, $cb) = @_;
     
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 _RepositoryJSON2XML
+
+=cut
+
+sub _RepositoryJSON2XML {
+    my ($self, $repository) = @_;
+    
+    unless (ref($repository) eq 'HASH') {
+        die 'Repository given is not a HASH';
+    }
+    
+    my $node = XML::LibXML::Element->new($repository->{name});
+    
+    $node->appendTextChild('Module', $repository->{module});
+    $node->appendTextChild('TokenLabel', $repository->{token_label});
+    $node->appendTextChild('PIN', $repository->{pin});
+
+    if (defined $repository->{capacity}) {
+        $node->appendTextChild('Capacity', $repository->{capacity});
+    }
+    if (exists $repository->{require_backup}) {
+        $node->appendChild(XML::LibXML::Element->new('RequireBackup'));
+    }
+    if (exists $repository->{skip_public_key}) {
+        $node->appendChild(XML::LibXML::Element->new('SkipPublicKey'));
+    }
+    
+    return $node;
+}
+
+=head2 _RepositoryXML2JSON
+
+=cut
+
+sub _RepositoryXML2JSON {
+    my ($self, $node) = @_;
+    
+    unless (blessed $node and $node->isa('XML::LibXML::Node')) {
+        die 'Node given is not an XML::LibXML::Node class';
+    }
+
+    my $attributes = $node->attributes;
+    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
+        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
+    }
+    
+    #
+    # name attribute on Repository
+    #
+    my $name = $attributes->getNamedItem('name');
+    unless (defined $name) {
+        die 'Missing attribute name on Repository element';
+    }
+    unless (blessed $name and $name->isa('XML::LibXML::Attr')) {
+        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
+    }
+    unless ($name->value) {
+        die 'No value in attribute name on Repository element';
+    }
+
+    #
+    # <Module></Module> element
+    #
+    my ($module) = $node->findnodes('Module');
+    unless (defined $module) {
+        die 'Missing Module in Repository '.$name->value;
+    }
+    unless (blessed $module and $module->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for Module by XML::LibXML::Node->find in Repository '.$name->value;
+    }
+    unless ($module->textContent) {
+        die 'No value for Module in Repository '.$name->value;
+    }
+
+    #
+    # <TokenLabel></TokenLabel> element
+    #
+    my ($token_label) = $node->findnodes('TokenLabel');
+    unless (defined $token_label) {
+        die 'Missing TokenLabel in Repository '.$name->value;
+    }
+    unless (blessed $token_label and $token_label->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for TokenLabel by XML::LibXML::Node->find in Repository '.$name->value;
+    }
+    unless ($token_label->textContent) {
+        die 'No value for TokenLabel in Repository '.$name->value;
+    }
+
+    #
+    # <PIN></PIN> element
+    #
+    my ($pin) = $node->findnodes('PIN');
+    unless (defined $pin) {
+        die 'Missing PIN in Repository '.$name->value;
+    }
+    unless (blessed $pin and $pin->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for PIN by XML::LibXML::Node->find in Repository '.$name->value;
+    }
+    unless ($pin->textContent) {
+        die 'No value for PIN in Repository '.$name->value;
+    }
+    
+    #
+    # <Capacity></Capacity> element
+    #
+    my ($capacity) = $node->findnodes('Capacity');
+    if (defined $capacity) {
+        unless (blessed $capacity and $capacity->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for Capacity by XML::LibXML::Node->find in Repository '.$name->value;
+        }
+        unless ($capacity->textContent) {
+            die 'No value for Capacity in Repository '.$name->value;
+        }
+    }
+
+    #
+    # <RequireBackup /> element
+    #
+    my ($require_backup) = $node->findnodes('RequireBackup');
+    if (defined $require_backup) {
+        unless (blessed $require_backup and $require_backup->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for RequireBackup by XML::LibXML::Node->find in Repository '.$name->value;
+        }
+    }
+    
+    #
+    # <SkipPublicKey /> element
+    #
+    my ($skip_public_key) = $node->findnodes('SkipPublicKey');
+    if (defined $skip_public_key) {
+        unless (blessed $skip_public_key and $skip_public_key->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for SkipPublicKey by XML::LibXML::Node->find in Repository '.$name->value;
+        }
+    }
+    
+    return {
+        name => $name->value,
+        module => $module->textContent,
+        token_label => $token_label->textContent,
+        pin => $pin->textContent,
+        (defined $capacity ? (capacity => $capacity->textContent) : ()),
+        (defined $require_backup ? (require_backup => 1) : ()),
+        (defined $skip_public_key ? (skip_public_key => 1) : ())
+    };
+}
+
+=head2 ReadRepositories
+
+=cut
+
+sub ReadRepositories {
+    my ($self, $cb) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'conf.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No conf.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'conf.xml'}->{read}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The conf.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my @repositories;
+    eval {
+        foreach my $node ($dom->findnodes('/Configuration/RepositoryList/Repository')) {
+            push(@repositories, $self->_RepositoryXML2JSON($node));
+        }
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    if (scalar @repositories == 1) {
+        $self->Successful($cb, { repository => $repositories[0] });
+    }
+    elsif (scalar @repositories) {
+        $self->Successful($cb, { repository => \@repositories });
+    }
+    else {
+        $self->Successful($cb);
+    }
+}
+
+=head2 CreateRepository
+
+=cut
+
+sub CreateRepository {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'conf.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No conf.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'conf.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The conf.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %repository;
+    eval {
+        foreach my $node ($dom->findnodes('/Configuration/RepositoryList/Repository')) {
+            $_ = $self->_RepositoryXML2JSON($node);
+            $repository{$_->{name}} = $_;
+        }
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    foreach my $repository (ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : $q->{repository}) {
+        if (exists $repository{$repository->{name}}) {
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Repository '.$repository->{name}.' already exists';
+            ));
+            return;
+        }
+    }
+
+    # TODO
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 ReadRepository
+
+=cut
+
+sub ReadRepository {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'conf.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No conf.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'conf.xml'}->{read}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The conf.xml configuration file is not readable'
+        ));
+        return;
+    }
+    
+    unless (exists $q->{repository}) {
+        $self->Successful($cb);
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %repository;
+    eval {
+        foreach my $node ($dom->findnodes('/Configuration/RepositoryList/Repository')) {
+            $_ = $self->_RepositoryXML2JSON($node);
+            $repository{$_->{name}} = $_;
+        }
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my @repositories;
+    foreach my $repository (ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : $q->{repository}) {
+        if (exists $repository{$repository->{name}}) {
+            push(@repositories, $repository{$repository->{name}});
+        }
+    }
+
+    if (scalar @repositories == 1) {
+        $self->Successful($cb, { repository => $repositories[0] });
+    }
+    elsif (scalar @repositories) {
+        $self->Successful($cb, { repository => \@repositories });
+    }
+    else {
+        $self->Successful($cb);
+    }
+}
+
+=head2 UpdateRepository
+
+=cut
+
+sub UpdateRepository {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'conf.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No conf.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'conf.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The conf.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    # TODO
+
+    $self->Error($cb, 'Not Implemented');
+}
+
+=head2 DeleteRepository
+
+=cut
+
+sub DeleteRepository {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'conf.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No conf.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'conf.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The conf.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    # TODO
+
     $self->Error($cb, 'Not Implemented');
 }
 

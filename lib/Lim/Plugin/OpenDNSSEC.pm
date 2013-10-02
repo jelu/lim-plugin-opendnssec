@@ -144,6 +144,90 @@ sub Calls {
             }
         },
         #
+        # Detailed calls for managing HSM repositories, these work with the
+        # configure file conf.xml
+        #
+        ReadRepositories => {
+            out => {
+                repository => {
+                    name => 'string',
+                    module => 'string',
+                    token_label => 'string',
+                    pin => 'string',
+                    capacity => 'integer optional',
+                    require_backup => 'bool optional',
+                    skip_public_key => 'bool optional'
+                }
+            }
+        },
+        CreateRepository => {
+            uri_map => [
+                'repository.name=\w+'
+            ],
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string',
+                    module => 'string',
+                    token_label => 'string',
+                    pin => 'string',
+                    capacity => 'integer optional',
+                    require_backup => 'bool optional',
+                    skip_public_key => 'bool optional'
+                }
+            }
+        },
+        ReadRepository => {
+            uri_map => [
+                'repository.name=\w+'
+            ],
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            },
+            out => {
+                repository => {
+                    name => 'string',
+                    module => 'string',
+                    token_label => 'string',
+                    pin => 'string',
+                    capacity => 'integer optional',
+                    require_backup => 'bool optional',
+                    skip_public_key => 'bool optional'
+                }
+            }
+        },
+        UpdateRepository => {
+            uri_map => [
+                'repository.name=\w+'
+            ],
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string',
+                    module => 'string',
+                    token_label => 'string',
+                    pin => 'string',
+                    capacity => 'integer optional',
+                    require_backup => 'bool optional',
+                    skip_public_key => 'bool optional'
+                }
+            }
+        },
+        DeleteRepository => {
+            uri_map => [
+                'repository.name=\w+'
+            ],
+            in => {
+                repository => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            }
+        },
+        #
         # Calls for ods-control
         #
         UpdateControl => {
