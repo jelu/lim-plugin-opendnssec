@@ -2,7 +2,7 @@ package Lim::Plugin::OpenDNSSEC::Server;
 
 use common::sense;
 
-use Fcntl qw(:seek);
+use Fcntl qw(:seek :flock);
 use IO::File ();
 use Digest::SHA ();
 use Scalar::Util qw(weaken blessed);
@@ -398,28 +398,67 @@ sub ReadConfig {
         if (exists $files->{$read->{name}}) {
             my $file = $files->{$read->{name}};
             
-            if ($file->{read} and defined (my $fh = IO::File->new($file->{name}))) {
-                my ($tell, $content);
-                $fh->seek(0, SEEK_END);
-                $tell = $fh->tell;
-                $fh->seek(0, SEEK_SET);
-                if ($fh->read($content, $tell) == $tell) {
-                    if (exists $result->{file}) {
-                        unless (ref($result->{file}) eq 'ARRAY') {
-                            $result->{file} = [ $result->{file} ];
-                        }
-                        push(@{$result->{file}}, {
-                            name => $file->{name},
-                            content => $content
-                        });
+            unless ($file->{read}) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'File "'.$read->{name}.'" not readable'
+                ));
+                return;
+            }
+            
+            my $fh = IO::File->new($file->{name});
+            unless (defined $fh) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to open file "'.$read->{name}.'": '.$!
+                ));
+                return;
+            }
+
+            unless (flock($fh, LOCK_SH|LOCK_NB)) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 400,
+                    message => 'Unable to lock file "'.$read->{name}.'": '.$!
+                ));
+                return;
+            }
+            
+            my ($tell, $content);
+            $fh->seek(0, SEEK_END);
+            $tell = $fh->tell;
+            $fh->seek(0, SEEK_SET);
+            if ($fh->read($content, $tell) == $tell) {
+                if (exists $result->{file}) {
+                    unless (ref($result->{file}) eq 'ARRAY') {
+                        $result->{file} = [ $result->{file} ];
                     }
-                    else {
-                        $result->{file} = {
-                            name => $file->{name},
-                            content => $content
-                        };
-                    }
+                    push(@{$result->{file}}, {
+                        name => $file->{name},
+                        content => $content
+                    });
                 }
+                else {
+                    $result->{file} = {
+                        name => $file->{name},
+                        content => $content
+                    };
+                }
+            }
+            else {
+                flock($fh, LOCK_UN);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to read all content of file "'.$read->{name}
+                ));
+                return;
+            }
+            
+            unless (flock($fh, LOCK_UN)) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to unlock file "'.$read->{name}.'": '.$!
+                ));
+                return;
             }
         }
         else {
@@ -446,40 +485,90 @@ sub UpdateConfig {
         if (exists $files->{$read->{name}}) {
             my $file = $files->{$read->{name}};
 
-            if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
-                print $tmp $read->{content};
-                $tmp->flush;
-                $tmp->close;
-                
-                my $fh = IO::File->new;
-                if ($fh->open($tmp->filename)) {
-                    my ($tell, $content);
-                    $fh->seek(0, SEEK_END);
-                    $tell = $fh->tell;
-                    $fh->seek(0, SEEK_SET);
-                    unless ($fh->read($content, $tell) == $tell) {
-                        $self->Error($cb, Lim::Error->new(
-                            code => 500,
-                            message => 'Failed to write "'.$read->{name}.'" to temporary file'
-                        ));
-                        return;
-                    }
-                    unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
-                        $self->Error($cb, Lim::Error->new(
-                            code => 500,
-                            message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
-                        ));
-                        return;
-                    }
-                    unless (rename($tmp->filename, $file->{name}))
-                    {
-                        $self->Error($cb, Lim::Error->new(
-                            code => 500,
-                            message => 'Failed to rename "'.$read->{name}.'"'
-                        ));
-                        return;
-                    }
+            unless ($file->{write}) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'File "'.$read->{name}.'" not writable'
+                ));
+                return;
+            }
+            
+            my $tmp = Lim::Util::TempFileLikeThis($file->{name});
+            unless (defined $tmp) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to create temporary file: '.$!
+                ));
+                return;
+            }
+            
+            my $fh = IO::File->new($file->{name});
+            unless (defined $fh) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to open file "'.$read->{name}.'": '.$!
+                ));
+                return;
+            }
+
+            unless (flock($fh, LOCK_EX|LOCK_NB)) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 400,
+                    message => 'Unable to lock file "'.$read->{name}.'": '.$!
+                ));
+                return;
+            }
+
+            print $tmp $read->{content};
+            $tmp->flush;
+            $tmp->close;
+            
+            my $tmp_fh = IO::File->new;
+            if ($tmp_fh->open($tmp->filename)) {
+                my ($tell, $content);
+                $tmp_fh->seek(0, SEEK_END);
+                $tell = $tmp_fh->tell;
+                $tmp_fh->seek(0, SEEK_SET);
+                unless ($tmp_fh->read($content, $tell) == $tell) {
+                    flock($fh, LOCK_UN);
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Failed to write "'.$read->{name}.'" to temporary file'
+                    ));
+                    return;
                 }
+                unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
+                    flock($fh, LOCK_UN);
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
+                    ));
+                    return;
+                }
+                unless (rename($tmp->filename, $file->{name})) {
+                    flock($fh, LOCK_UN);
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Failed to rename "'.$read->{name}.'"'
+                    ));
+                    return;
+                }
+            }
+            else {
+                flock($fh, LOCK_UN);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to open temporary file: '.$!
+                ));
+                return;
+            }
+            
+            unless (flock($fh, LOCK_UN)) {
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Unable to unlock file "'.$read->{name}.'": '.$!
+                ));
+                return;
             }
         }
         else {
@@ -514,8 +603,9 @@ sub _RepositoryJSON2XML {
         die 'Repository given is not a HASH';
     }
     
-    my $node = XML::LibXML::Element->new($repository->{name});
-    
+    my $node = XML::LibXML::Element->new('Repository');
+    $node->setAttribute('name', $repository->{name});
+
     $node->appendTextChild('Module', $repository->{module});
     $node->appendTextChild('TokenLabel', $repository->{token_label});
     $node->appendTextChild('PIN', $repository->{pin});
@@ -649,6 +739,39 @@ sub _RepositoryXML2JSON {
     };
 }
 
+=head2 _RepositoryNameXML
+
+=cut
+
+sub _RepositoryNameXML {
+    my ($self, $node) = @_;
+    
+    unless (blessed $node and $node->isa('XML::LibXML::Node')) {
+        die 'Node given is not an XML::LibXML::Node class';
+    }
+
+    my $attributes = $node->attributes;
+    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
+        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
+    }
+    
+    #
+    # name attribute on Repository
+    #
+    my $name = $attributes->getNamedItem('name');
+    unless (defined $name) {
+        die 'Missing attribute name on Repository element';
+    }
+    unless (blessed $name and $name->isa('XML::LibXML::Attr')) {
+        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
+    }
+    unless ($name->value) {
+        die 'No value in attribute name on Repository element';
+    }
+    
+    return $name->value;
+}
+
 =head2 ReadRepositories
 
 =cut
@@ -673,9 +796,26 @@ sub ReadRepositories {
         return;
     }
 
+    my $fh = IO::File->new($files->{'conf.xml'}->{name});
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open conf.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_SH|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock conf.xml: '.$!
+        ));
+        return;
+    }
+
     my $dom;
     eval {
-        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+        $dom = XML::LibXML->load_xml(IO => $fh);
     };
     if ($@) {
         $self->Error($cb, Lim::Error->new(
@@ -695,6 +835,15 @@ sub ReadRepositories {
         $self->Error($cb, Lim::Error->new(
             code => 500,
             message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock conf.xml: '.$!
         ));
         return;
     }
@@ -734,11 +883,29 @@ sub CreateRepository {
         return;
     }
 
+    my $fh = IO::File->new($files->{'conf.xml'}->{name}, 'r+');
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open conf.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock conf.xml: '.$!
+        ));
+        return;
+    }
+
     my $dom;
     eval {
-        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+        $dom = XML::LibXML->load_xml(IO => $fh);
     };
     if ($@) {
+        flock($fh, LOCK_UN);
         $self->Error($cb, Lim::Error->new(
             code => 500,
             message => 'Unable to load XML file: '.$@
@@ -749,11 +916,11 @@ sub CreateRepository {
     my %repository;
     eval {
         foreach my $node ($dom->findnodes('/Configuration/RepositoryList/Repository')) {
-            $_ = $self->_RepositoryXML2JSON($node);
-            $repository{$_->{name}} = $_;
+            $repository{$self->_RepositoryNameXML($node)} = 1;
         }
     };
     if ($@) {
+        flock($fh, LOCK_UN);
         $self->Error($cb, Lim::Error->new(
             code => 500,
             message => 'XML Error: '.$@
@@ -761,19 +928,133 @@ sub CreateRepository {
         return;
     }
 
-    foreach my $repository (ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : $q->{repository}) {
-        if (exists $repository{$repository->{name}}) {
+    my ($repository_list) = $dom->findnodes('/Configuration/RepositoryList');
+    unless (defined $repository_list) {
+        my ($configuration) = $dom->findnodes('/Configuration');
+        
+        unless (defined $configuration) {
+            flock($fh, LOCK_UN);
             $self->Error($cb, Lim::Error->new(
                 code => 500,
-                message => 'Repository '.$repository->{name}.' already exists';
+                message => 'Unable to find Configuration element within XML'
+            ));
+            return;
+        }
+        
+        $configuration->appendChild(($repository_list = XML::LibXML::Element->new('RepositoryList')));
+    }
+    unless (blessed $repository_list and $repository_list->isa('XML::LibXML::Node')) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find or create RepositoryList element within XML'
+        ));
+        return;
+    }
+
+    foreach my $repository (ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : $q->{repository}) {
+        if (exists $repository{$repository->{name}}) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Repository '.$repository->{name}.' already exists'
+            ));
+            return;
+        }
+        
+        eval {
+            $repository_list->addChild($self->_RepositoryJSON2XML($repository));
+        };
+        if ($@) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to add repository '.$repository->{name}.' to XML: '.$@
             ));
             return;
         }
     }
 
-    # TODO
+    my $tmp = Lim::Util::TempFile;
+    unless (defined $tmp and chmod(0600, $tmp->filename)) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to create temporary file: '.$!
+        ));
+        return;
+    }
+    $fh->seek(0, SEEK_SET);
+    while ($fh->sysread(my $buf, 32*1024)) {
+        unless ($tmp->syswrite($buf) == length($buf)) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to create backup copy of conf.xml: '.$!
+            ));
+            return;
+        }
+    }
+    $tmp->flush;
 
-    $self->Error($cb, 'Not Implemented');
+    my $fh_sha = Digest::SHA->new(512);
+    $fh->seek(0, SEEK_SET);
+    $fh_sha->addfile($fh);
+
+    my $tmp_sha = Digest::SHA->new(512);
+    $tmp->seek(0, SEEK_SET);
+    $tmp_sha->addfile($tmp);
+    
+    unless ($fh_sha->b64digest eq $tmp_sha->b64digest) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Verification of backup file failed, checksums does not match!'
+        ));
+        return;
+    }
+    
+    $fh->seek(0, SEEK_SET);
+    unless ($dom->toFH($fh)) {
+        $fh->seek(0, SEEK_SET);
+        $tmp->seek(0, SEEK_SET);
+        
+        my $wrote = 0;
+        while ((my $read = $tmp->sysread(my $buf, 32*1024))) {
+            $wrote += $read;
+            unless ($fh->syswrite($buf) == length($buf)) {
+                flock($fh, LOCK_UN);
+                $tmp->unlink_on_destroy(0);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Failure when writing new conf.xml and unable to restore backup conf.xml, kept backup in '.$tmp->filename.': '.$!
+                ));
+                return;
+            }
+        }
+        $fh->flush;
+        $fh->truncate($wrote);
+        flock($fh, LOCK_UN);
+        $fh->close;
+
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Failure when writing new conf.xml: '.$!
+        ));
+        return;
+    }
+    $fh->flush;
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock conf.xml: '.$!
+        ));
+        return;
+    }
+
+    $self->Successful($cb);
 }
 
 =head2 ReadRepository
@@ -800,14 +1081,26 @@ sub ReadRepository {
         return;
     }
     
-    unless (exists $q->{repository}) {
-        $self->Successful($cb);
+    my $fh = IO::File->new($files->{'conf.xml'}->{name});
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open conf.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_SH|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock conf.xml: '.$!
+        ));
         return;
     }
 
     my $dom;
     eval {
-        $dom = XML::LibXML->load_xml(location => $files->{'conf.xml'}->{name});
+        $dom = XML::LibXML->load_xml(IO => $fh);
     };
     if ($@) {
         $self->Error($cb, Lim::Error->new(
@@ -837,6 +1130,15 @@ sub ReadRepository {
         if (exists $repository{$repository->{name}}) {
             push(@repositories, $repository{$repository->{name}});
         }
+    }
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock conf.xml: '.$!
+        ));
+        return;
     }
 
     if (scalar @repositories == 1) {
