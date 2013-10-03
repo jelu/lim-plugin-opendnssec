@@ -1176,9 +1176,179 @@ sub UpdateRepository {
         return;
     }
 
-    # TODO
+    my $fh = IO::File->new($files->{'conf.xml'}->{name}, 'r+');
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open conf.xml: '.$!
+        ));
+        return;
+    }
 
-    $self->Error($cb, 'Not Implemented');
+    unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock conf.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %repository;
+    eval {
+        foreach my $node ($dom->findnodes('/Configuration/RepositoryList/Repository')) {
+            $repository{$self->_RepositoryNameXML($node)} = $node;
+        }
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my ($repository_list) = $dom->findnodes('/Configuration/RepositoryList');
+    unless (defined $repository_list) {
+        my ($configuration) = $dom->findnodes('/Configuration');
+        
+        unless (defined $configuration) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to find Configuration element within XML'
+            ));
+            return;
+        }
+        
+        $configuration->appendChild(($repository_list = XML::LibXML::Element->new('RepositoryList')));
+    }
+    unless (blessed $repository_list and $repository_list->isa('XML::LibXML::Node')) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find or create RepositoryList element within XML'
+        ));
+        return;
+    }
+
+    foreach my $repository (ref($q->{repository}) eq 'ARRAY' ? @{$q->{repository}} : $q->{repository}) {
+        unless (exists $repository{$repository->{name}}) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Repository '.$repository->{name}.' does not exists'
+            ));
+            return;
+        }
+        
+        eval {
+            $repository_list->removeChild($repository{$repository->{name}});
+            $repository_list->addChild($self->_RepositoryJSON2XML($repository));
+        };
+        if ($@) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to add repository '.$repository->{name}.' to XML: '.$@
+            ));
+            return;
+        }
+    }
+
+    my $tmp = Lim::Util::TempFile;
+    unless (defined $tmp and chmod(0600, $tmp->filename)) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to create temporary file: '.$!
+        ));
+        return;
+    }
+    $fh->seek(0, SEEK_SET);
+    while ($fh->sysread(my $buf, 32*1024)) {
+        unless ($tmp->syswrite($buf) == length($buf)) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to create backup copy of conf.xml: '.$!
+            ));
+            return;
+        }
+    }
+    $tmp->flush;
+
+    my $fh_sha = Digest::SHA->new(512);
+    $fh->seek(0, SEEK_SET);
+    $fh_sha->addfile($fh);
+
+    my $tmp_sha = Digest::SHA->new(512);
+    $tmp->seek(0, SEEK_SET);
+    $tmp_sha->addfile($tmp);
+    
+    unless ($fh_sha->b64digest eq $tmp_sha->b64digest) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Verification of backup file failed, checksums does not match!'
+        ));
+        return;
+    }
+    
+    $fh->seek(0, SEEK_SET);
+    unless ($dom->toFH($fh)) {
+        $fh->seek(0, SEEK_SET);
+        $tmp->seek(0, SEEK_SET);
+        
+        my $wrote = 0;
+        while ((my $read = $tmp->sysread(my $buf, 32*1024))) {
+            $wrote += $read;
+            unless ($fh->syswrite($buf) == length($buf)) {
+                flock($fh, LOCK_UN);
+                $tmp->unlink_on_destroy(0);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Failure when writing new conf.xml and unable to restore backup conf.xml, kept backup in '.$tmp->filename.': '.$!
+                ));
+                return;
+            }
+        }
+        $fh->flush;
+        $fh->truncate($wrote);
+        flock($fh, LOCK_UN);
+        $fh->close;
+
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Failure when writing new conf.xml: '.$!
+        ));
+        return;
+    }
+    $fh->flush;
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock conf.xml: '.$!
+        ));
+        return;
+    }
+
+    $self->Successful($cb);
 }
 
 =head2 DeleteRepository
