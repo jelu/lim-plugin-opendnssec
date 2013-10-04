@@ -592,6 +592,94 @@ sub DeleteConfig {
     $self->Error($cb, 'Not Implemented');
 }
 
+=head2 __XMLAttr
+
+=cut
+
+sub __XMLAttr {
+    my ($self, $node, $name) = @_;
+    
+    my $attributes = $node->attributes;
+    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
+        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
+    }
+    
+    my $attr = $attributes->getNamedItem($name);
+    unless (defined $attr) {
+        die 'Missing attribute '.$name.' on '.$node->nodeName.' element';
+    }
+    unless (blessed $attr and $attr->isa('XML::LibXML::Attr')) {
+        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
+    }
+    unless ($attr->value) {
+        die 'No value in attribute '.$name.' on '.$node->nodeName.' element';
+    }
+    
+    return $attr->value;
+}
+
+=head2 __XMLEleReq
+
+=cut
+
+sub __XMLEleReq {
+    my ($self, $node, $name) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    unless (defined $ele) {
+        die 'Missing '.$name.' in '.$node->nodeName;
+    }
+    unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
+    }
+    unless ($ele->textContent) {
+        die 'No value for '.$name.' in '.$node->nodeName;
+    }
+
+    return $ele->textContent;
+}
+
+=head2 __XMLEle
+
+=cut
+
+sub __XMLEle {
+    my ($self, $node, $name) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    if (defined $ele) {
+        unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
+        }
+        unless ($ele->textContent) {
+            die 'No value for '.$name.' in '.$node->nodeName;
+        }
+        
+        return $ele->textContent;
+    }
+    
+    return;
+}
+
+=head2 __XMLBoolEle
+
+=cut
+
+sub __XMLBoolEle {
+    my ($self, $node, $name) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    if (defined $ele) {
+        unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
+        }
+        
+        return 1;
+    }
+    
+    return 0;
+}
+
 =head2 _RepositoryJSON2XML
 
 =cut
@@ -634,108 +722,29 @@ sub _RepositoryXML2JSON {
         die 'Node given is not an XML::LibXML::Node class';
     }
 
-    my $attributes = $node->attributes;
-    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
-        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
-    }
-    
-    #
-    # name attribute on Repository
-    #
-    my $name = $attributes->getNamedItem('name');
-    unless (defined $name) {
-        die 'Missing attribute name on Repository element';
-    }
-    unless (blessed $name and $name->isa('XML::LibXML::Attr')) {
-        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
-    }
-    unless ($name->value) {
-        die 'No value in attribute name on Repository element';
-    }
+    my $name = $self->__XMLAttr($node, 'name');
 
-    #
-    # <Module></Module> element
-    #
-    my ($module) = $node->findnodes('Module');
-    unless (defined $module) {
-        die 'Missing Module in Repository '.$name->value;
-    }
-    unless (blessed $module and $module->isa('XML::LibXML::Node')) {
-        die 'Invalid class returned for Module by XML::LibXML::Node->find in Repository '.$name->value;
-    }
-    unless ($module->textContent) {
-        die 'No value for Module in Repository '.$name->value;
-    }
-
-    #
-    # <TokenLabel></TokenLabel> element
-    #
-    my ($token_label) = $node->findnodes('TokenLabel');
-    unless (defined $token_label) {
-        die 'Missing TokenLabel in Repository '.$name->value;
-    }
-    unless (blessed $token_label and $token_label->isa('XML::LibXML::Node')) {
-        die 'Invalid class returned for TokenLabel by XML::LibXML::Node->find in Repository '.$name->value;
-    }
-    unless ($token_label->textContent) {
-        die 'No value for TokenLabel in Repository '.$name->value;
-    }
-
-    #
-    # <PIN></PIN> element
-    #
-    my ($pin) = $node->findnodes('PIN');
-    unless (defined $pin) {
-        die 'Missing PIN in Repository '.$name->value;
-    }
-    unless (blessed $pin and $pin->isa('XML::LibXML::Node')) {
-        die 'Invalid class returned for PIN by XML::LibXML::Node->find in Repository '.$name->value;
-    }
-    unless ($pin->textContent) {
-        die 'No value for PIN in Repository '.$name->value;
-    }
-    
-    #
-    # <Capacity></Capacity> element
-    #
-    my ($capacity) = $node->findnodes('Capacity');
-    if (defined $capacity) {
-        unless (blessed $capacity and $capacity->isa('XML::LibXML::Node')) {
-            die 'Invalid class returned for Capacity by XML::LibXML::Node->find in Repository '.$name->value;
-        }
-        unless ($capacity->textContent) {
-            die 'No value for Capacity in Repository '.$name->value;
-        }
-    }
-
-    #
-    # <RequireBackup /> element
-    #
-    my ($require_backup) = $node->findnodes('RequireBackup');
-    if (defined $require_backup) {
-        unless (blessed $require_backup and $require_backup->isa('XML::LibXML::Node')) {
-            die 'Invalid class returned for RequireBackup by XML::LibXML::Node->find in Repository '.$name->value;
-        }
-    }
-    
-    #
-    # <SkipPublicKey /> element
-    #
-    my ($skip_public_key) = $node->findnodes('SkipPublicKey');
-    if (defined $skip_public_key) {
-        unless (blessed $skip_public_key and $skip_public_key->isa('XML::LibXML::Node')) {
-            die 'Invalid class returned for SkipPublicKey by XML::LibXML::Node->find in Repository '.$name->value;
-        }
+    my ($module, $token_label, $pin, $capacity, $require_backup, $skip_public_key);
+    eval {
+        $module = $self->__XMLEleReq($node, 'Module');
+        $token_label = $self->__XMLEleReq($node, 'TokenLabel');
+        $pin = $self->__XMLEleReq($node, 'PIN');
+        $capacity = $self->__XMLEle($node, 'PIN');
+        $require_backup = $self->__XMLBoolEle($node, 'RequireBackup');
+        $skip_public_key = $self->__XMLBoolEle($node, 'SkipPublicKey');
+    };
+    if ($@) {
+        die 'Error in Repository '.$name.': '.$@;
     }
     
     return {
-        name => $name->value,
-        module => $module->textContent,
-        token_label => $token_label->textContent,
-        pin => $pin->textContent,
-        (defined $capacity ? (capacity => $capacity->textContent) : ()),
-        (defined $require_backup ? (require_backup => 1) : ()),
-        (defined $skip_public_key ? (skip_public_key => 1) : ())
+        name => $name,
+        module => $module,
+        token_label => $token_label,
+        pin => $pin,
+        (defined $capacity ? (capacity => $capacity) : ()),
+        ($require_backup ? (require_backup => 1) : ()),
+        ($skip_public_key ? (skip_public_key => 1) : ())
     };
 }
 
@@ -750,26 +759,7 @@ sub _RepositoryNameXML {
         die 'Node given is not an XML::LibXML::Node class';
     }
 
-    my $attributes = $node->attributes;
-    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
-        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
-    }
-    
-    #
-    # name attribute on Repository
-    #
-    my $name = $attributes->getNamedItem('name');
-    unless (defined $name) {
-        die 'Missing attribute name on Repository element';
-    }
-    unless (blessed $name and $name->isa('XML::LibXML::Attr')) {
-        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
-    }
-    unless ($name->value) {
-        die 'No value in attribute name on Repository element';
-    }
-    
-    return $name->value;
+    return $self->__XMLAttr($node, 'name');
 }
 
 =head2 ReadRepositories
@@ -1542,6 +1532,847 @@ sub DeleteRepository {
         $self->Error($cb, Lim::Error->new(
             code => 500,
             message => 'Unable to unlock conf.xml: '.$!
+        ));
+        return;
+    }
+
+    $self->Successful($cb);
+}
+
+=head2 _PolicyJSON2XML
+
+=cut
+
+sub _PolicyJSON2XML {
+    my ($self, $repository) = @_;
+    
+    unless (ref($repository) eq 'HASH') {
+        die 'Policy given is not a HASH';
+    }
+    
+    my $node = XML::LibXML::Element->new('Policy');
+#    $node->setAttribute('name', $repository->{name});
+#
+#    $node->appendTextChild('Module', $repository->{module});
+#    $node->appendTextChild('TokenLabel', $repository->{token_label});
+#    $node->appendTextChild('PIN', $repository->{pin});
+#
+#    if (defined $repository->{capacity}) {
+#        $node->appendTextChild('Capacity', $repository->{capacity});
+#    }
+#    if (exists $repository->{require_backup}) {
+#        $node->appendChild(XML::LibXML::Element->new('RequireBackup'));
+#    }
+#    if (exists $repository->{skip_public_key}) {
+#        $node->appendChild(XML::LibXML::Element->new('SkipPublicKey'));
+#    }
+    
+    return $node;
+}
+
+=head2 _PolicyXML2JSON
+
+=cut
+
+sub _PolicyXML2JSON {
+    my ($self, $node) = @_;
+    
+    unless (blessed $node and $node->isa('XML::LibXML::Node')) {
+        die 'Node given is not an XML::LibXML::Node class';
+    }
+
+    my $name = $self->__XMLAttr($node, 'name');
+
+#    my ($module, $token_label, $pin, $capacity, $require_backup, $skip_public_key);
+#    eval {
+#        $module = $self->__XMLEleReq($node, 'Module');
+#        $token_label = $self->__XMLEleReq($node, 'TokenLabel');
+#        $pin = $self->__XMLEleReq($node, 'PIN');
+#        $capacity = $self->__XMLEle($node, 'PIN');
+#        $require_backup = $self->__XMLBoolEle($node, 'RequireBackup');
+#        $skip_public_key = $self->__XMLBoolEle($node, 'SkipPublicKey');
+#    };
+#    if ($@) {
+#        die 'Error in Policy '.$name.': '.$@;
+#    }
+#    
+    return {
+        name => $name,
+#        module => $module,
+#        token_label => $token_label,
+#        pin => $pin,
+#        (defined $capacity ? (capacity => $capacity) : ()),
+#        ($require_backup ? (require_backup => 1) : ()),
+#        ($skip_public_key ? (skip_public_key => 1) : ())
+    };
+}
+
+=head2 _PolicyNameXML
+
+=cut
+
+sub _PolicyNameXML {
+    my ($self, $node) = @_;
+    
+    unless (blessed $node and $node->isa('XML::LibXML::Node')) {
+        die 'Node given is not an XML::LibXML::Node class';
+    }
+
+    return $self->__XMLAttr($node, 'name');
+}
+
+=head2 ReadPolicies
+
+=cut
+
+sub ReadPolicies {
+    my ($self, $cb) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'kasp.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No kasp.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'kasp.xml'}->{read}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The kasp.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $fh = IO::File->new($files->{'kasp.xml'}->{name});
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_SH|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my @policies;
+    eval {
+        foreach my $node ($dom->findnodes('/KASP/Policy')) {
+            push(@policies, $self->_PolicyXML2JSON($node));
+        }
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    if (scalar @policies == 1) {
+        $self->Successful($cb, { policy => $policies[0] });
+    }
+    elsif (scalar @policies) {
+        $self->Successful($cb, { policy => \@policies });
+    }
+    else {
+        $self->Successful($cb);
+    }
+}
+
+=head2 CreatePolicy
+
+=cut
+
+sub CreatePolicy {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'kasp.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No kasp.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'kasp.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The kasp.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $fh = IO::File->new($files->{'kasp.xml'}->{name}, 'r+');
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %policy;
+    eval {
+        foreach my $node ($dom->findnodes('/KASP/Policy')) {
+            $policy{$self->_PolicyNameXML($node)} = 1;
+        }
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my ($kasp) = $dom->findnodes('/KASP');
+    unless (defined $kasp) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+    unless (blessed $kasp and $kasp->isa('XML::LibXML::Node')) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+
+    foreach my $policy (ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : $q->{policy}) {
+        if (exists $policy{$policy->{name}}) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Policy '.$policy->{name}.' already exists'
+            ));
+            return;
+        }
+        
+        eval {
+            $kasp->addChild($self->_PolicyJSON2XML($policy));
+        };
+        if ($@) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to add policy '.$policy->{name}.' to XML: '.$@
+            ));
+            return;
+        }
+    }
+
+    my $tmp = Lim::Util::TempFile;
+    unless (defined $tmp and chmod(0600, $tmp->filename)) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to create temporary file: '.$!
+        ));
+        return;
+    }
+    $fh->seek(0, SEEK_SET);
+    while ($fh->sysread(my $buf, 32*1024)) {
+        unless ($tmp->syswrite($buf) == length($buf)) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to create backup copy of kasp.xml: '.$!
+            ));
+            return;
+        }
+    }
+    $tmp->flush;
+
+    my $fh_sha = Digest::SHA->new(512);
+    $fh->seek(0, SEEK_SET);
+    $fh_sha->addfile($fh);
+
+    my $tmp_sha = Digest::SHA->new(512);
+    $tmp->seek(0, SEEK_SET);
+    $tmp_sha->addfile($tmp);
+    
+    unless ($fh_sha->b64digest eq $tmp_sha->b64digest) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Verification of backup file failed, checksums does not match!'
+        ));
+        return;
+    }
+    
+    $fh->seek(0, SEEK_SET);
+    unless ($dom->toFH($fh)) {
+        $fh->seek(0, SEEK_SET);
+        $tmp->seek(0, SEEK_SET);
+        
+        my $wrote = 0;
+        while ((my $read = $tmp->sysread(my $buf, 32*1024))) {
+            $wrote += $read;
+            unless ($fh->syswrite($buf) == length($buf)) {
+                flock($fh, LOCK_UN);
+                $tmp->unlink_on_destroy(0);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Failure when writing new kasp.xml and unable to restore backup kasp.xml, kept backup in '.$tmp->filename.': '.$!
+                ));
+                return;
+            }
+        }
+        $fh->flush;
+        $fh->truncate($wrote);
+        flock($fh, LOCK_UN);
+        $fh->close;
+
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Failure when writing new kasp.xml: '.$!
+        ));
+        return;
+    }
+    $fh->flush;
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    $self->Successful($cb);
+}
+
+=head2 ReadPolicy
+
+=cut
+
+sub ReadPolicy {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'kasp.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No kasp.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'kasp.xml'}->{read}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The kasp.xml configuration file is not readable'
+        ));
+        return;
+    }
+    
+    my $fh = IO::File->new($files->{'kasp.xml'}->{name});
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_SH|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %policy;
+    eval {
+        foreach my $node ($dom->findnodes('/KASP/Policy')) {
+            $_ = $self->_PolicyXML2JSON($node);
+            $policy{$_->{name}} = $_;
+        }
+    };
+    if ($@) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my @policies;
+    foreach my $policy (ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : $q->{policy}) {
+        if (exists $policy{$policy->{name}}) {
+            push(@policies, $policy{$policy->{name}});
+        }
+    }
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    if (scalar @policies == 1) {
+        $self->Successful($cb, { policy => $policies[0] });
+    }
+    elsif (scalar @policies) {
+        $self->Successful($cb, { policy => \@policies });
+    }
+    else {
+        $self->Successful($cb);
+    }
+}
+
+=head2 UpdatePolicy
+
+=cut
+
+sub UpdatePolicy {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'kasp.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No kasp.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'kasp.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The kasp.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $fh = IO::File->new($files->{'kasp.xml'}->{name}, 'r+');
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %policy;
+    eval {
+        foreach my $node ($dom->findnodes('/KASP/Policy')) {
+            $policy{$self->_PolicyNameXML($node)} = $node;
+        }
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my ($kasp) = $dom->findnodes('/KASP');
+    unless (defined $kasp) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+    unless (blessed $kasp and $kasp->isa('XML::LibXML::Node')) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+
+    foreach my $policy (ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : $q->{policy}) {
+        unless (exists $policy{$policy->{name}}) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Policy '.$policy->{name}.' does not exists'
+            ));
+            return;
+        }
+        
+        eval {
+            $kasp->removeChild($policy{$policy->{name}});
+            $kasp->addChild($self->_PolicyJSON2XML($policy));
+        };
+        if ($@) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to update policy '.$policy->{name}.' to XML: '.$@
+            ));
+            return;
+        }
+    }
+
+    my $tmp = Lim::Util::TempFile;
+    unless (defined $tmp and chmod(0600, $tmp->filename)) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to create temporary file: '.$!
+        ));
+        return;
+    }
+    $fh->seek(0, SEEK_SET);
+    while ($fh->sysread(my $buf, 32*1024)) {
+        unless ($tmp->syswrite($buf) == length($buf)) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to create backup copy of kasp.xml: '.$!
+            ));
+            return;
+        }
+    }
+    $tmp->flush;
+
+    my $fh_sha = Digest::SHA->new(512);
+    $fh->seek(0, SEEK_SET);
+    $fh_sha->addfile($fh);
+
+    my $tmp_sha = Digest::SHA->new(512);
+    $tmp->seek(0, SEEK_SET);
+    $tmp_sha->addfile($tmp);
+    
+    unless ($fh_sha->b64digest eq $tmp_sha->b64digest) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Verification of backup file failed, checksums does not match!'
+        ));
+        return;
+    }
+    
+    $fh->seek(0, SEEK_SET);
+    unless ($dom->toFH($fh)) {
+        $fh->seek(0, SEEK_SET);
+        $tmp->seek(0, SEEK_SET);
+        
+        my $wrote = 0;
+        while ((my $read = $tmp->sysread(my $buf, 32*1024))) {
+            $wrote += $read;
+            unless ($fh->syswrite($buf) == length($buf)) {
+                flock($fh, LOCK_UN);
+                $tmp->unlink_on_destroy(0);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Failure when writing new kasp.xml and unable to restore backup kasp.xml, kept backup in '.$tmp->filename.': '.$!
+                ));
+                return;
+            }
+        }
+        $fh->flush;
+        $fh->truncate($wrote);
+        flock($fh, LOCK_UN);
+        $fh->close;
+
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Failure when writing new kasp.xml: '.$!
+        ));
+        return;
+    }
+    $fh->flush;
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    $self->Successful($cb);
+}
+
+=head2 DeletePolicy
+
+=cut
+
+sub DeletePolicy {
+    my ($self, $cb, $q) = @_;
+    my $files = $self->_ScanConfig(1);
+
+    unless (exists $files->{'kasp.xml'}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'No kasp.xml configuration file exists'
+        ));
+        return;
+    }
+    
+    unless ($files->{'kasp.xml'}->{write}) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'The kasp.xml configuration file is not readable'
+        ));
+        return;
+    }
+
+    my $fh = IO::File->new($files->{'kasp.xml'}->{name}, 'r+');
+    unless (defined $fh) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to open kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    unless (flock($fh, LOCK_EX|LOCK_NB)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 400,
+            message => 'Unable to lock kasp.xml: '.$!
+        ));
+        return;
+    }
+
+    my $dom;
+    eval {
+        $dom = XML::LibXML->load_xml(IO => $fh);
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to load XML file: '.$@
+        ));
+        return;
+    }
+    
+    my %policy;
+    eval {
+        foreach my $node ($dom->findnodes('/KASP/Policy')) {
+            $policy{$self->_PolicyNameXML($node)} = $node;
+        }
+    };
+    if ($@) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'XML Error: '.$@
+        ));
+        return;
+    }
+
+    my ($kasp) = $dom->findnodes('/KASP');
+    unless (defined $kasp) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+    unless (blessed $kasp and $kasp->isa('XML::LibXML::Node')) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to find KASP element within XML'
+        ));
+        return;
+    }
+
+    foreach my $policy (ref($q->{policy}) eq 'ARRAY' ? @{$q->{policy}} : $q->{policy}) {
+        unless (exists $policy{$policy->{name}}) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Policy '.$policy->{name}.' does not exists'
+            ));
+            return;
+        }
+        
+        eval {
+            $kasp->removeChild($policy{$policy->{name}});
+        };
+        if ($@) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to remove policy '.$policy->{name}.' to XML: '.$@
+            ));
+            return;
+        }
+    }
+
+    my $tmp = Lim::Util::TempFile;
+    unless (defined $tmp and chmod(0600, $tmp->filename)) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to create temporary file: '.$!
+        ));
+        return;
+    }
+    $fh->seek(0, SEEK_SET);
+    while ($fh->sysread(my $buf, 32*1024)) {
+        unless ($tmp->syswrite($buf) == length($buf)) {
+            flock($fh, LOCK_UN);
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'Unable to create backup copy of kasp.xml: '.$!
+            ));
+            return;
+        }
+    }
+    $tmp->flush;
+
+    my $fh_sha = Digest::SHA->new(512);
+    $fh->seek(0, SEEK_SET);
+    $fh_sha->addfile($fh);
+
+    my $tmp_sha = Digest::SHA->new(512);
+    $tmp->seek(0, SEEK_SET);
+    $tmp_sha->addfile($tmp);
+    
+    unless ($fh_sha->b64digest eq $tmp_sha->b64digest) {
+        flock($fh, LOCK_UN);
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Verification of backup file failed, checksums does not match!'
+        ));
+        return;
+    }
+    
+    $fh->seek(0, SEEK_SET);
+    unless ($dom->toFH($fh)) {
+        $fh->seek(0, SEEK_SET);
+        $tmp->seek(0, SEEK_SET);
+        
+        my $wrote = 0;
+        while ((my $read = $tmp->sysread(my $buf, 32*1024))) {
+            $wrote += $read;
+            unless ($fh->syswrite($buf) == length($buf)) {
+                flock($fh, LOCK_UN);
+                $tmp->unlink_on_destroy(0);
+                $self->Error($cb, Lim::Error->new(
+                    code => 500,
+                    message => 'Failure when writing new kasp.xml and unable to restore backup kasp.xml, kept backup in '.$tmp->filename.': '.$!
+                ));
+                return;
+            }
+        }
+        $fh->flush;
+        $fh->truncate($wrote);
+        flock($fh, LOCK_UN);
+        $fh->close;
+
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Failure when writing new kasp.xml: '.$!
+        ));
+        return;
+    }
+    $fh->flush;
+
+    $dom = undef;
+    unless (flock($fh, LOCK_UN)) {
+        $self->Error($cb, Lim::Error->new(
+            code => 500,
+            message => 'Unable to unlock kasp.xml: '.$!
         ));
         return;
     }
