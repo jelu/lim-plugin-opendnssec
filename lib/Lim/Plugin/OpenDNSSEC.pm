@@ -228,6 +228,420 @@ sub Calls {
             }
         },
         #
+        # Detailed calls for managing KASP policies, these work with the
+        # configure file kasp.xml
+        #
+        ReadPolicies => {
+            out => {
+                policy => {
+                    name => 'string',
+                    description => 'string',
+                    signatures => {
+                        '' => 'required',
+                        resign => 'string',
+                        refresh => 'string',
+                        validity => {
+                            '' => 'required',
+                            default => 'string',
+                            denial => 'string'
+                        },
+                        jitter => 'string',
+                        inception_offset => 'string'
+                    },
+                    denial => {
+                        '' => 'required',
+                        nsec => 'bool optional',
+                        nsec3 => {
+                            opt_out => 'bool optional',
+                            resalt => 'string',
+                            hash => {
+                                '' => 'required',
+                                algorithm => 'integer',
+                                iterations => 'integer',
+                                salt => {
+                                    length => 'integer',
+                                    value => 'string optional'
+                                }
+                            }
+                        }
+                    },
+                    keys => {
+                        '' => 'required',
+                        ttl => 'string',
+                        retrie_safety => 'string',
+                        publish_safety => 'string',
+                        share_keys => 'bool optional',
+                        purge => 'string optional',
+                        ksk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional',
+                            RFC5011 => 'bool optional'
+                        },
+                        zsk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional'
+                        }
+                    },
+                    zone => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string',
+                            serial => 'string'
+                        }
+                    },
+                    parent => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        ds => {
+                            '' => 'required',
+                            ttl => 'string',
+                        },
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string'
+                        }
+                    },
+                    audit => {
+                        partial => 'bool optional'
+                    }
+                }
+            }
+        },
+        CreatePolicy => {
+            uri_map => [
+                'policy.name=\w+'
+            ],
+            in => {
+                policy => {
+                    name => 'string',
+                    description => 'string',
+                    signatures => {
+                        '' => 'required',
+                        resign => 'string',
+                        refresh => 'string',
+                        validity => {
+                            '' => 'required',
+                            default => 'string',
+                            denial => 'string'
+                        },
+                        jitter => 'string',
+                        inception_offset => 'string'
+                    },
+                    denial => {
+                        '' => 'required',
+                        nsec => 'bool optional',
+                        nsec3 => {
+                            opt_out => 'bool optional',
+                            resalt => 'string',
+                            hash => {
+                                '' => 'required',
+                                algorithm => 'integer',
+                                iterations => 'integer',
+                                salt => {
+                                    length => 'integer',
+                                    value => 'string optional'
+                                }
+                            }
+                        }
+                    },
+                    keys => {
+                        '' => 'required',
+                        ttl => 'string',
+                        retrie_safety => 'string',
+                        publish_safety => 'string',
+                        share_keys => 'bool optional',
+                        purge => 'string optional',
+                        ksk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional',
+                            RFC5011 => 'bool optional'
+                        },
+                        zsk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional'
+                        }
+                    },
+                    zone => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string',
+                            serial => 'string'
+                        }
+                    },
+                    parent => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        ds => {
+                            '' => 'required',
+                            ttl => 'string',
+                        },
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string'
+                        }
+                    },
+                    audit => {
+                        partial => 'bool optional'
+                    }
+                }
+            }
+        },
+        ReadPolicy => {
+            uri_map => [
+                'policy.name=\w+'
+            ],
+            in => {
+                policy => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            },
+            out => {
+                policy => {
+                    name => 'string',
+                    description => 'string',
+                    signatures => {
+                        '' => 'required',
+                        resign => 'string',
+                        refresh => 'string',
+                        validity => {
+                            '' => 'required',
+                            default => 'string',
+                            denial => 'string'
+                        },
+                        jitter => 'string',
+                        inception_offset => 'string'
+                    },
+                    denial => {
+                        '' => 'required',
+                        nsec => 'bool optional',
+                        nsec3 => {
+                            opt_out => 'bool optional',
+                            resalt => 'string',
+                            hash => {
+                                '' => 'required',
+                                algorithm => 'integer',
+                                iterations => 'integer',
+                                salt => {
+                                    length => 'integer',
+                                    value => 'string optional'
+                                }
+                            }
+                        }
+                    },
+                    keys => {
+                        '' => 'required',
+                        ttl => 'string',
+                        retrie_safety => 'string',
+                        publish_safety => 'string',
+                        share_keys => 'bool optional',
+                        purge => 'string optional',
+                        ksk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional',
+                            RFC5011 => 'bool optional'
+                        },
+                        zsk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional'
+                        }
+                    },
+                    zone => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string',
+                            serial => 'string'
+                        }
+                    },
+                    parent => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        ds => {
+                            '' => 'required',
+                            ttl => 'string',
+                        },
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string'
+                        }
+                    },
+                    audit => {
+                        partial => 'bool optional'
+                    }
+                }
+            }
+        },
+        UpdatePolicy => {
+            uri_map => [
+                'policy.name=\w+'
+            ],
+            in => {
+                policy => {
+                    name => 'string',
+                    description => 'string',
+                    signatures => {
+                        '' => 'required',
+                        resign => 'string',
+                        refresh => 'string',
+                        validity => {
+                            '' => 'required',
+                            default => 'string',
+                            denial => 'string'
+                        },
+                        jitter => 'string',
+                        inception_offset => 'string'
+                    },
+                    denial => {
+                        '' => 'required',
+                        nsec => 'bool optional',
+                        nsec3 => {
+                            opt_out => 'bool optional',
+                            resalt => 'string',
+                            hash => {
+                                '' => 'required',
+                                algorithm => 'integer',
+                                iterations => 'integer',
+                                salt => {
+                                    length => 'integer',
+                                    value => 'string optional'
+                                }
+                            }
+                        }
+                    },
+                    keys => {
+                        '' => 'required',
+                        ttl => 'string',
+                        retrie_safety => 'string',
+                        publish_safety => 'string',
+                        share_keys => 'bool optional',
+                        purge => 'string optional',
+                        ksk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional',
+                            RFC5011 => 'bool optional'
+                        },
+                        zsk => {
+                            '' => 'required',
+                            algorithm => {
+                                '' => 'required',
+                                length => 'integer optional',
+                                value => 'integer'
+                            },
+                            lifetime => 'string',
+                            repository => 'string',
+                            standby => 'bool optional',
+                            manual_rollover => 'bool optional'
+                        }
+                    },
+                    zone => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string',
+                            serial => 'string'
+                        }
+                    },
+                    parent => {
+                        '' => 'required',
+                        propagation_delay => 'string',
+                        ds => {
+                            '' => 'required',
+                            ttl => 'string',
+                        },
+                        soa => {
+                            '' => 'required',
+                            ttl => 'string',
+                            minimum => 'string'
+                        }
+                    },
+                    audit => {
+                        partial => 'bool optional'
+                    }
+                }
+            }
+        },
+        DeletePolicy => {
+            uri_map => [
+                'policy.name=\w+'
+            ],
+            in => {
+                policy => {
+                    '' => 'required',
+                    name => 'string'
+                }
+            }
+        },
+        #
         # Calls for ods-control
         #
         UpdateControl => {
