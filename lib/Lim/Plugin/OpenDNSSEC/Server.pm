@@ -729,7 +729,7 @@ sub _RepositoryXML2JSON {
         $module = $self->__XMLEleReq($node, 'Module');
         $token_label = $self->__XMLEleReq($node, 'TokenLabel');
         $pin = $self->__XMLEleReq($node, 'PIN');
-        $capacity = $self->__XMLEle($node, 'PIN');
+        $capacity = $self->__XMLEle($node, 'Capacity');
         $require_backup = $self->__XMLBoolEle($node, 'RequireBackup');
         $skip_public_key = $self->__XMLBoolEle($node, 'SkipPublicKey');
     };
