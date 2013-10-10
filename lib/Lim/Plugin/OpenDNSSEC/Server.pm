@@ -618,6 +618,74 @@ sub __XMLAttr {
     return $attr->value;
 }
 
+=head2 __XMLEleAttrReq
+
+=cut
+
+sub __XMLEleAttrReq {
+    my ($self, $node, $name, $attrName) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    unless (defined $ele) {
+        die 'Missing '.$name.' in '.$node->nodeName;
+    }
+    unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
+    }
+
+    my $attributes = $ele->attributes;
+    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
+        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
+    }
+    
+    my $attr = $attributes->getNamedItem($attrName);
+    unless (defined $attr) {
+        die 'Missing attribute '.$attrName.' on '.$node->nodeName.' element';
+    }
+    unless (blessed $attr and $attr->isa('XML::LibXML::Attr')) {
+        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
+    }
+    unless ($attr->value) {
+        die 'No value in attribute '.$attrName.' on '.$node->nodeName.' element';
+    }
+    
+    return $attr->value;
+}
+
+=head2 __XMLEleAttr
+
+=cut
+
+sub __XMLEleAttr {
+    my ($self, $node, $name, $attrName) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    unless (defined $ele) {
+        die 'Missing '.$name.' in '.$node->nodeName;
+    }
+    unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+        die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
+    }
+
+    my $attributes = $ele->attributes;
+    unless (blessed $attributes and $attributes->isa('XML::LibXML::NamedNodeMap')) {
+        die 'XML::LibXML::Node->attributes did not return a XML::LibXML::NamedNodeMap';
+    }
+    
+    my $attr = $attributes->getNamedItem($attrName);
+    unless (defined $attr) {
+        return;
+    }
+    unless (blessed $attr and $attr->isa('XML::LibXML::Attr')) {
+        die 'XML::LibXML::NamedNodeMap->getNamedItem did not return a XML::LibXML::Attr';
+    }
+    unless ($attr->value) {
+        die 'No value in attribute '.$attrName.' on '.$node->nodeName.' element';
+    }
+    
+    return $attr->value;
+}
+
 =head2 __XMLEleReq
 
 =cut
@@ -653,6 +721,25 @@ sub __XMLEle {
         }
         unless ($ele->textContent) {
             die 'No value for '.$name.' in '.$node->nodeName;
+        }
+        
+        return $ele->textContent;
+    }
+    
+    return;
+}
+
+=head2 __XMLEleEmpty
+
+=cut
+
+sub __XMLEleEmpty {
+    my ($self, $node, $name) = @_;
+    
+    my ($ele) = $node->findnodes($name);
+    if (defined $ele) {
+        unless (blessed $ele and $ele->isa('XML::LibXML::Node')) {
+            die 'Invalid class returned for '.$name.' by XML::LibXML::Node->find in '.$node->nodeName;
         }
         
         return $ele->textContent;
@@ -1544,28 +1631,125 @@ sub DeleteRepository {
 =cut
 
 sub _PolicyJSON2XML {
-    my ($self, $repository) = @_;
+    my ($self, $policy) = @_;
     
-    unless (ref($repository) eq 'HASH') {
+    unless (ref($policy) eq 'HASH') {
         die 'Policy given is not a HASH';
     }
     
     my $node = XML::LibXML::Element->new('Policy');
-#    $node->setAttribute('name', $repository->{name});
-#
-#    $node->appendTextChild('Module', $repository->{module});
-#    $node->appendTextChild('TokenLabel', $repository->{token_label});
-#    $node->appendTextChild('PIN', $repository->{pin});
-#
-#    if (defined $repository->{capacity}) {
-#        $node->appendTextChild('Capacity', $repository->{capacity});
-#    }
-#    if (exists $repository->{require_backup}) {
-#        $node->appendChild(XML::LibXML::Element->new('RequireBackup'));
-#    }
-#    if (exists $repository->{skip_public_key}) {
-#        $node->appendChild(XML::LibXML::Element->new('SkipPublicKey'));
-#    }
+    $node->setAttribute('name', $policy->{name});
+    $node->appendTextChild('Description', $policy->{description});
+    
+    my $signatures = XML::LibXML::Element->new('Signatures');
+    $signatures->appendTextChild('Resign', $policy->{signatures}->{resign});
+    $signatures->appendTextChild('Refresh', $policy->{signatures}->{refresh});
+    my $signatures_validity = XML::LibXML::Element->new('Validity');
+    $signatures->appendTextChild('Default', $policy->{signatures}->{validity}->{default});
+    $signatures->appendTextChild('Denial', $policy->{signatures}->{validity}->{denial});
+    $signatures->appendChild($signatures_validity);
+    $signatures->appendTextChild('Jitter', $policy->{signatures}->{jitter});
+    $signatures->appendTextChild('InceptionOffset', $policy->{signatures}->{inception_offset});
+    $node->appendChild($signatures);
+    
+    my $denial = XML::LibXML::Element->new('Denial');
+    if (exists $policy->{nsec}) {
+        $denial->appendChild(XML::LibXML::Element->new('NSEC'));
+    }
+    if (exists $policy->{nsec3}) {
+        my $nsec3 = XML::LibXML::Element->new('NSEC3');
+        if (exists $policy->{denial}->{nsec3}->{opt_out}) {
+            $nsec3->appendChild(XML::LibXML::Element->new('OptOut'));
+        }
+        $nsec3->appendTextChild('Resalt', $policy->{denial}->{nsec3}->{resalt});
+        my $hash = XML::LibXML::Element->new('Hash');
+        $hash->appendTextChild('Algorithm', $policy->{denial}->{nsec3}->{hash}->{algorithm});
+        $hash->appendTextChild('Iterations', $policy->{denial}->{nsec3}->{hash}->{iterations});
+        my $salt = XML::LibXML::Element->new('Salt');
+        $salt->setAttribute('length', $policy->{denial}->{nsec3}->{hash}->{length});
+        if (exists $policy->{denial}->{nsec3}->{hash}->{value}) {
+            $salt->appendText($policy->{denial}->{nsec3}->{hash}->{value});
+        }
+        $hash->appendChild($salt);
+        $nsec3->appendChild($hash);
+        $denial->appendChild($nsec3);
+    }
+    $node->appendChild($denial);
+
+    my $keys = XML::LibXML::Element->new('Keys');
+    $keys->appendTextChild('TTL', $policy->{keys}->{ttl});
+    $keys->appendTextChild('RetireSafety', $policy->{keys}->{retrie_safety});
+    $keys->appendTextChild('PublishSafety', $policy->{keys}->{publish_safety});
+    if (exists $policy->{keys}->{share_keys}) {
+        $keys->appendChild(XML::LibXML::Element->new('ShareKeys'));
+    }
+    if (exists $policy->{keys}->{purge}) {
+        $keys->appendTextChild('Purge', $policy->{keys}->{purge});
+    }
+    my $ksk = XML::LibXML::Element->new('KSK');
+    my $ksk_algorithm = XML::LibXML::Element->new('Algorithm');
+    if (exists $policy->{keys}->{ksk}->{algorithm}->{length}) {
+        $ksk_algorithm->setAttribute('length', $policy->{keys}->{ksk}->{algorithm}->{length});
+    }
+    $ksk_algorithm->appendText($policy->{keys}->{ksk}->{algorithm}->{value});
+    $ksk->appendChild($ksk_algorithm);
+    $ksk->appendTextChild('Lifetime', $policy->{keys}->{ksk}->{lifetime});
+    $ksk->appendTextChild('Repository', $policy->{keys}->{ksk}->{repository});
+    if (exists $policy->{keys}->{ksk}->{standby}) {
+        $ksk->appendChild(XML::LibXML::Element->new('Standby'));
+    }
+    if (exists $policy->{keys}->{ksk}->{manual_rollover}) {
+        $ksk->appendChild(XML::LibXML::Element->new('ManualRollover'));
+    }
+    if (exists $policy->{keys}->{ksk}->{RFC5011}) {
+        $ksk->appendChild(XML::LibXML::Element->new('RFC5011'));
+    }
+    $keys->appendChild($ksk);
+    my $zsk = XML::LibXML::Element->new('KSK');
+    my $zsk_algorithm = XML::LibXML::Element->new('Algorithm');
+    if (exists $policy->{keys}->{zsk}->{algorithm}->{length}) {
+        $zsk_algorithm->setAttribute('length', $policy->{keys}->{zsk}->{algorithm}->{length});
+    }
+    $zsk_algorithm->appendText($policy->{keys}->{zsk}->{algorithm}->{value});
+    $zsk->appendChild($zsk_algorithm);
+    $zsk->appendTextChild('Lifetime', $policy->{keys}->{zsk}->{lifetime});
+    $zsk->appendTextChild('Repository', $policy->{keys}->{zsk}->{repository});
+    if (exists $policy->{keys}->{zsk}->{standby}) {
+        $zsk->appendChild(XML::LibXML::Element->new('Standby'));
+    }
+    if (exists $policy->{keys}->{zsk}->{manual_rollover}) {
+        $zsk->appendChild(XML::LibXML::Element->new('ManualRollover'));
+    }
+    $keys->appendChild($zsk);
+    $node->appendChild($keys);
+
+    my $zone = XML::LibXML::Element->new('Zone');
+    $zone->appendTextChild('PropagationDelay', $policy->{zone}->{propagation_delay});
+    my $zone_soa = XML::LibXML::Element->new('SOA');
+    $zone_soa->appendTextChild('TTL', $policy->{zone}->{soa}->{ttl});
+    $zone_soa->appendTextChild('Minimum', $policy->{zone}->{soa}->{minimum});
+    $zone_soa->appendTextChild('Serial', $policy->{zone}->{soa}->{serial});
+    $zone->appendChild($zone_soa);
+    $node->appendChild($zone);
+
+    my $parent = XML::LibXML::Element->new('Parent');
+    $parent->appendTextChild('PropagationDelay', $policy->{parent}->{propagation_delay});
+    my $parent_ds = XML::LibXML::Element->new('DS');
+    $parent_ds->appendTextChild('TTL', $policy->{parent}->{ds}->{ttl});
+    $parent->appendChild($parent_ds);
+    my $parent_soa = XML::LibXML::Element->new('SOA');
+    $parent_soa->appendTextChild('TTL', $policy->{parent}->{soa}->{ttl});
+    $parent_soa->appendTextChild('Minimum', $policy->{parent}->{soa}->{minimum});
+    $parent->appendChild($parent_soa);
+    $node->appendChild($parent);
+    
+    if (exists $policy->{audit}) {
+        my $audit = XML::LibXML::Element->new('Audit');
+        if (ref($policy->{audit}) eq 'HASH' and exists $policy->{audit}->{partial}) {
+            $audit->appendChild(XML::LibXML::Element->new('Partial'));
+        }
+        $node->appendChild($audit);
+    }
     
     return $node;
 }
@@ -1582,28 +1766,202 @@ sub _PolicyXML2JSON {
     }
 
     my $name = $self->__XMLAttr($node, 'name');
+    my $description = $self->__XMLEleReq($node, 'Description');
 
-#    my ($module, $token_label, $pin, $capacity, $require_backup, $skip_public_key);
-#    eval {
-#        $module = $self->__XMLEleReq($node, 'Module');
-#        $token_label = $self->__XMLEleReq($node, 'TokenLabel');
-#        $pin = $self->__XMLEleReq($node, 'PIN');
-#        $capacity = $self->__XMLEle($node, 'PIN');
-#        $require_backup = $self->__XMLBoolEle($node, 'RequireBackup');
-#        $skip_public_key = $self->__XMLBoolEle($node, 'SkipPublicKey');
-#    };
-#    if ($@) {
-#        die 'Error in Policy '.$name.': '.$@;
-#    }
-#    
+    my $signatures;
+    {
+        my ($resign, $refresh, $default, $denial, $jitter, $inception_offset);
+        eval {
+            $resign = $self->__XMLEleReq($node, 'Signatures/Resign');
+            $refresh = $self->__XMLEleReq($node, 'Signatures/Refresh');
+            $default = $self->__XMLEleReq($node, 'Signatures/Validity/Default');
+            $denial = $self->__XMLEleReq($node, 'Signatures/Validity/Denial');
+            $jitter = $self->__XMLEleReq($node, 'Signatures/Jitter');
+            $inception_offset = $self->__XMLEleReq($node, 'Signatures/InceptionOffset');
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Signatures: '.$@;
+        }
+        $signatures => {
+            resign => $resign,
+            refresh => $refresh,
+            validity => {
+                default => $default,
+                denial => $denial
+            },
+            jitter => $jitter,
+            inception_offset => $inception_offset
+        };
+    }
+    
+    my $denial;
+    {
+        my ($nsec, $nsec3, $opt_out, $resalt, $algorithm, $iterations, $length, $value);
+        eval {
+            $nsec = $self->__XMLBoolEle($node, 'Denial/NSEC');
+            $nsec3 = $self->__XMLBoolEle($node, 'Denial/NSEC3');
+            
+            if ($nsec3) {
+                $opt_out = $self->__XMLBoolEle($node, 'Denial/NSEC3/OptOut');
+                $resalt = $self->__XMLEleReq($node, 'Denial/NSEC3/Resalt');
+                $algorithm = $self->__XMLEleReq($node, 'Denial/NSEC3/Algorithm');
+                $iterations = $self->__XMLEleReq($node, 'Denial/NSEC3/Iterations');
+                $length = $self->__XMLEleAttrReq($node, 'Denial/NSEC3/Salt', 'length');
+                $value = $self->__XMLEleEmpty($node, 'Denial/NSEC3/Salt');
+            }
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Denial: '.$@;
+        }
+        $denial = {
+            ($nsec ? (nsec => 1) : ()),
+            ($nsec3 ? (nsec3 => {
+                ($opt_out ? (opt_out => 1) : ()),
+                resalt => $resalt,
+                hash => {
+                    algorithm => $algorithm,
+                    iterations => $iterations,
+                    salt => {
+                        length => $length,
+                        ($value ? (value => $value) : ())
+                    }
+                }
+            }) : ())
+        };
+    }
+
+    my $keys;
+    {
+        my ($ttl, $retire_safety, $publish_safety, $share_keys, $purge,
+            $klength, $kvalue, $klifetime, $krepository, $kstandby, $kmanual_rollover, $kRFC5011,
+            $zlength, $zvalue, $zlifetime, $zrepository, $zstandby, $zmanual_rollover);
+        eval {
+            $ttl = $self->__XMLEleReq($node, 'Keys/TTL');
+            $retire_safety = $self->__XMLEleReq($node, 'Keys/RetireSafety');
+            $publish_safety = $self->__XMLEleReq($node, 'Keys/PublishSafety');
+            $share_keys = $self->__XMLBoolEle($node, 'Keys/ShareKeys');
+            $purge = $self->__XMLEle($node, 'Keys/Purge');
+            
+            $klength = $self->__XMLEleAttr($node, 'Keys/KSK/Algorithm', 'length');
+            $kvalue = $self->__XMLEleReq($node, 'Keys/KSK/Algorithm');
+            $klifetime = $self->__XMLEleReq($node, 'Keys/KSK/Lifetime');
+            $krepository = $self->__XMLEleReq($node, 'Keys/KSK/Repository');
+            $kstandby = $self->__XMLBoolEle($node, 'Keys/KSK/Standby');
+            $kmanual_rollover = $self->__XMLBoolEle($node, 'Keys/KSK/ManualRollover');
+            $kRFC5011 = $self->__XMLEle($node, 'Keys/KSK/RFC5011');
+
+            $zlength = $self->__XMLEleAttr($node, 'Keys/ZSK/Algorithm', 'length');
+            $zvalue = $self->__XMLEleReq($node, 'Keys/ZSK/Algorithm');
+            $zlifetime = $self->__XMLEleReq($node, 'Keys/ZSK/Lifetime');
+            $zrepository = $self->__XMLEleReq($node, 'Keys/ZSK/Repository');
+            $zstandby = $self->__XMLBoolEle($node, 'Keys/ZSK/Standby');
+            $zmanual_rollover = $self->__XMLBoolEle($node, 'Keys/ZSK/ManualRollover');
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Keys: '.$@;
+        }
+        $keys = {
+            ttl => $ttl,
+            retrie_safety => $retire_safety,
+            publish_safety => $publish_safety,
+            ($share_keys ? (share_keys => 1) : ()),
+            (defined $purge ? (purge => $purge) : (),
+            ksk => {
+                algorithm => {
+                    (defined $klength ? (length => $klength) : ()),
+                    value => $kvalue
+                },
+                lifetime => $klifetime,
+                repository => $krepository,
+                ($kstandby ? (standby => 1) : ()),
+                ($kmanual_rollover ? (manual_rollover => 1) : ()),
+                ($kRFC5011 ? (RFC5011 => 1) : ())
+            },
+            zsk => {
+                algorithm => {
+                    (defined $zlength ? (length => $zlength) : ()),
+                    value => $zvalue
+                },
+                lifetime => $zlifetime,
+                repository => $zrepository,
+                ($zstandby ? (standby => 1) : ()),
+                ($zmanual_rollover ? (manual_rollover => 1) : ())
+            }
+        };
+    }
+    
+    my $zone;
+    {
+        my ($propagation_delay, $ttl, $minimum, $serial);
+        eval {
+            $propagation_delay = $self->__XMLEleReq($node, 'Zone/PropagationDelay');
+            $ttl = $self->__XMLEleReq($node, 'Zone/SOA/TTL');
+            $minimum = $self->__XMLEleReq($node, 'Zone/SOA/Minimum');
+            $serial = $self->__XMLBoolEle($node, 'Zone/SOA/Serial');
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Zone: '.$@;
+        }
+        $zone = {
+            propagation_delay => $propagation_delay,
+            soa => {
+                ttl => $ttl,
+                minimum => $minimum,
+                serial => $serial
+            }
+        };
+    }
+
+    my $parent;
+    {
+        my ($propagation_delay, $ttl, $minimum, $ds_ttl);
+        eval {
+            $propagation_delay = $self->__XMLEleReq($node, 'Parent/PropagationDelay');
+            $ttl = $self->__XMLEleReq($node, 'Parent/SOA/TTL');
+            $minimum = $self->__XMLEleReq($node, 'Parent/SOA/Minimum');
+            $ds_ttl = $self->__XMLEleReq($node, 'Parent/DS/TTL');
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Parent: '.$@;
+        }
+        $parent = {
+            propagation_delay => $propagation_delay,
+            ds => {
+                ttl => $ds_ttl,
+            },
+            soa => {
+                ttl => $ttl,
+                minimum => $minimum
+            }
+        };
+    }
+
+    my $audit;
+    {
+        my ($partial);
+        eval {
+            $audit = $self->__XMLBoolEle($node, 'Audit');
+            $partial = $self->__XMLBoolEle($node, 'Audit/Partial');
+        };
+        if ($@) {
+            die 'Error in Policy '.$name.' Audit: '.$@;
+        }
+        if ($audit) {
+            $audit = {
+                ($partial ? (partial => 1) : ())
+            };
+        }
+    }
+
     return {
         name => $name,
-#        module => $module,
-#        token_label => $token_label,
-#        pin => $pin,
-#        (defined $capacity ? (capacity => $capacity) : ()),
-#        ($require_backup ? (require_backup => 1) : ()),
-#        ($skip_public_key ? (skip_public_key => 1) : ())
+        description => $description,
+        signatures => $signatures,
+        denial => $denial,
+        keys => $keys,
+        zone => $zone,
+        parent => $parent,
+        ($audit ? (audit => $audit) : ())
     };
 }
 
