@@ -1865,7 +1865,7 @@ sub _PolicyXML2JSON {
             retrie_safety => $retire_safety,
             publish_safety => $publish_safety,
             ($share_keys ? (share_keys => 1) : ()),
-            (defined $purge ? (purge => $purge) : (),
+            (defined $purge ? (purge => $purge) : ()),
             ksk => {
                 algorithm => {
                     (defined $klength ? (length => $klength) : ()),
