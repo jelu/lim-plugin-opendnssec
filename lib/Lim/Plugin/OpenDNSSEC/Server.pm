@@ -1645,8 +1645,8 @@ sub _PolicyJSON2XML {
     $signatures->appendTextChild('Resign', $policy->{signatures}->{resign});
     $signatures->appendTextChild('Refresh', $policy->{signatures}->{refresh});
     my $signatures_validity = XML::LibXML::Element->new('Validity');
-    $signatures->appendTextChild('Default', $policy->{signatures}->{validity}->{default});
-    $signatures->appendTextChild('Denial', $policy->{signatures}->{validity}->{denial});
+    $signatures_validity->appendTextChild('Default', $policy->{signatures}->{validity}->{default});
+    $signatures_validity->appendTextChild('Denial', $policy->{signatures}->{validity}->{denial});
     $signatures->appendChild($signatures_validity);
     $signatures->appendTextChild('Jitter', $policy->{signatures}->{jitter});
     $signatures->appendTextChild('InceptionOffset', $policy->{signatures}->{inception_offset});
@@ -1705,7 +1705,7 @@ sub _PolicyJSON2XML {
         $ksk->appendChild(XML::LibXML::Element->new('RFC5011'));
     }
     $keys->appendChild($ksk);
-    my $zsk = XML::LibXML::Element->new('KSK');
+    my $zsk = XML::LibXML::Element->new('ZSK');
     my $zsk_algorithm = XML::LibXML::Element->new('Algorithm');
     if (exists $policy->{keys}->{zsk}->{algorithm}->{length}) {
         $zsk_algorithm->setAttribute('length', $policy->{keys}->{zsk}->{algorithm}->{length});
