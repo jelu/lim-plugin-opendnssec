@@ -268,7 +268,7 @@ sub Calls {
                     keys => {
                         '' => 'required',
                         ttl => 'string',
-                        retrie_safety => 'string',
+                        retire_safety => 'string',
                         publish_safety => 'string',
                         share_keys => 'bool optional',
                         purge => 'string optional',
@@ -322,6 +322,7 @@ sub Calls {
                         }
                     },
                     audit => {
+                        active => 'bool',
                         partial => 'bool optional'
                     }
                 }
@@ -367,7 +368,7 @@ sub Calls {
                     keys => {
                         '' => 'required',
                         ttl => 'string',
-                        retrie_safety => 'string',
+                        retire_safety => 'string',
                         publish_safety => 'string',
                         share_keys => 'bool optional',
                         purge => 'string optional',
@@ -421,6 +422,7 @@ sub Calls {
                         }
                     },
                     audit => {
+                        active => 'bool',
                         partial => 'bool optional'
                     }
                 }
@@ -472,7 +474,7 @@ sub Calls {
                     keys => {
                         '' => 'required',
                         ttl => 'string',
-                        retrie_safety => 'string',
+                        retire_safety => 'string',
                         publish_safety => 'string',
                         share_keys => 'bool optional',
                         purge => 'string optional',
@@ -526,6 +528,7 @@ sub Calls {
                         }
                     },
                     audit => {
+                        active => 'bool',
                         partial => 'bool optional'
                     }
                 }
@@ -571,7 +574,7 @@ sub Calls {
                     keys => {
                         '' => 'required',
                         ttl => 'string',
-                        retrie_safety => 'string',
+                        retire_safety => 'string',
                         publish_safety => 'string',
                         share_keys => 'bool optional',
                         purge => 'string optional',
@@ -625,6 +628,7 @@ sub Calls {
                         }
                     },
                     audit => {
+                        active => 'bool',
                         partial => 'bool optional'
                     }
                 }

@@ -955,7 +955,7 @@ sub CreateRepository {
     unless ($files->{'conf.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The conf.xml configuration file is not readable'
+            message => 'The conf.xml configuration file is not writable'
         ));
         return;
     }
@@ -1248,7 +1248,7 @@ sub UpdateRepository {
     unless ($files->{'conf.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The conf.xml configuration file is not readable'
+            message => 'The conf.xml configuration file is not writable'
         ));
         return;
     }
@@ -1447,7 +1447,7 @@ sub DeleteRepository {
     unless ($files->{'conf.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The conf.xml configuration file is not readable'
+            message => 'The conf.xml configuration file is not writable'
         ));
         return;
     }
@@ -1678,7 +1678,7 @@ sub _PolicyJSON2XML {
 
     my $keys = XML::LibXML::Element->new('Keys');
     $keys->appendTextChild('TTL', $policy->{keys}->{ttl});
-    $keys->appendTextChild('RetireSafety', $policy->{keys}->{retrie_safety});
+    $keys->appendTextChild('RetireSafety', $policy->{keys}->{retire_safety});
     $keys->appendTextChild('PublishSafety', $policy->{keys}->{publish_safety});
     if (exists $policy->{keys}->{share_keys}) {
         $keys->appendChild(XML::LibXML::Element->new('ShareKeys'));
@@ -1743,9 +1743,9 @@ sub _PolicyJSON2XML {
     $parent->appendChild($parent_soa);
     $node->appendChild($parent);
     
-    if (exists $policy->{audit}) {
+    if (exists $policy->{audit} and $policy->{audit}->{active}) {
         my $audit = XML::LibXML::Element->new('Audit');
-        if (ref($policy->{audit}) eq 'HASH' and exists $policy->{audit}->{partial}) {
+        if (exists $policy->{audit}->{partial}) {
             $audit->appendChild(XML::LibXML::Element->new('Partial'));
         }
         $node->appendChild($audit);
@@ -1782,7 +1782,7 @@ sub _PolicyXML2JSON {
         if ($@) {
             die 'Error in Policy '.$name.' Signatures: '.$@;
         }
-        $signatures => {
+        $signatures = {
             resign => $resign,
             refresh => $refresh,
             validity => {
@@ -1804,10 +1804,10 @@ sub _PolicyXML2JSON {
             if ($nsec3) {
                 $opt_out = $self->__XMLBoolEle($node, 'Denial/NSEC3/OptOut');
                 $resalt = $self->__XMLEleReq($node, 'Denial/NSEC3/Resalt');
-                $algorithm = $self->__XMLEleReq($node, 'Denial/NSEC3/Algorithm');
-                $iterations = $self->__XMLEleReq($node, 'Denial/NSEC3/Iterations');
-                $length = $self->__XMLEleAttrReq($node, 'Denial/NSEC3/Salt', 'length');
-                $value = $self->__XMLEleEmpty($node, 'Denial/NSEC3/Salt');
+                $algorithm = $self->__XMLEleReq($node, 'Denial/NSEC3/Hash/Algorithm');
+                $iterations = $self->__XMLEleReq($node, 'Denial/NSEC3/Hash/Iterations');
+                $length = $self->__XMLEleAttrReq($node, 'Denial/NSEC3/Hash/Salt', 'length');
+                $value = $self->__XMLEleEmpty($node, 'Denial/NSEC3/Hash/Salt');
             }
         };
         if ($@) {
@@ -1862,7 +1862,7 @@ sub _PolicyXML2JSON {
         }
         $keys = {
             ttl => $ttl,
-            retrie_safety => $retire_safety,
+            retire_safety => $retire_safety,
             publish_safety => $publish_safety,
             ($share_keys ? (share_keys => 1) : ()),
             (defined $purge ? (purge => $purge) : ()),
@@ -1946,11 +1946,10 @@ sub _PolicyXML2JSON {
         if ($@) {
             die 'Error in Policy '.$name.' Audit: '.$@;
         }
-        if ($audit) {
-            $audit = {
-                ($partial ? (partial => 1) : ())
-            };
-        }
+        $audit = {
+            active => $audit ? 1 : 0,
+            ($partial ? (partial => 1) : ())
+        };
     }
 
     return {
@@ -1961,7 +1960,7 @@ sub _PolicyXML2JSON {
         keys => $keys,
         zone => $zone,
         parent => $parent,
-        ($audit ? (audit => $audit) : ())
+        audit => $audit
     };
 }
 
@@ -2085,7 +2084,7 @@ sub CreatePolicy {
     unless ($files->{'kasp.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The kasp.xml configuration file is not readable'
+            message => 'The kasp.xml configuration file is not writable'
         ));
         return;
     }
@@ -2372,7 +2371,7 @@ sub UpdatePolicy {
     unless ($files->{'kasp.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The kasp.xml configuration file is not readable'
+            message => 'The kasp.xml configuration file is not writable'
         ));
         return;
     }
@@ -2565,7 +2564,7 @@ sub DeletePolicy {
     unless ($files->{'kasp.xml'}->{write}) {
         $self->Error($cb, Lim::Error->new(
             code => 500,
-            message => 'The kasp.xml configuration file is not readable'
+            message => 'The kasp.xml configuration file is not writable'
         ));
         return;
     }
