@@ -1653,10 +1653,10 @@ sub _PolicyJSON2XML {
     $node->appendChild($signatures);
     
     my $denial = XML::LibXML::Element->new('Denial');
-    if (exists $policy->{nsec}) {
+    if (exists $policy->{denial}->{nsec}) {
         $denial->appendChild(XML::LibXML::Element->new('NSEC'));
     }
-    if (exists $policy->{nsec3}) {
+    elsif (exists $policy->{denial}->{nsec3}) {
         my $nsec3 = XML::LibXML::Element->new('NSEC3');
         if (exists $policy->{denial}->{nsec3}->{opt_out}) {
             $nsec3->appendChild(XML::LibXML::Element->new('OptOut'));
@@ -1666,13 +1666,16 @@ sub _PolicyJSON2XML {
         $hash->appendTextChild('Algorithm', $policy->{denial}->{nsec3}->{hash}->{algorithm});
         $hash->appendTextChild('Iterations', $policy->{denial}->{nsec3}->{hash}->{iterations});
         my $salt = XML::LibXML::Element->new('Salt');
-        $salt->setAttribute('length', $policy->{denial}->{nsec3}->{hash}->{length});
-        if (exists $policy->{denial}->{nsec3}->{hash}->{value}) {
-            $salt->appendText($policy->{denial}->{nsec3}->{hash}->{value});
+        $salt->setAttribute('length', $policy->{denial}->{nsec3}->{hash}->{salt}->{length});
+        if (exists $policy->{denial}->{nsec3}->{hash}->{salt}->{value}) {
+            $salt->appendText($policy->{denial}->{nsec3}->{hash}->{salt}->{value});
         }
         $hash->appendChild($salt);
         $nsec3->appendChild($hash);
         $denial->appendChild($nsec3);
+    }
+    else {
+        die 'Missing Denial content';
     }
     $node->appendChild($denial);
 
@@ -1819,10 +1822,10 @@ sub _PolicyXML2JSON {
                 ($opt_out ? (opt_out => 1) : ()),
                 resalt => $resalt,
                 hash => {
-                    algorithm => $algorithm,
-                    iterations => $iterations,
+                    algorithm => int($algorithm),
+                    iterations => int($iterations),
                     salt => {
-                        length => $length,
+                        length => int($length),
                         ($value ? (value => $value) : ())
                     }
                 }
@@ -1868,8 +1871,8 @@ sub _PolicyXML2JSON {
             (defined $purge ? (purge => $purge) : ()),
             ksk => {
                 algorithm => {
-                    (defined $klength ? (length => $klength) : ()),
-                    value => $kvalue
+                    (defined $klength ? (length => int($klength)) : ()),
+                    value => int($kvalue)
                 },
                 lifetime => $klifetime,
                 repository => $krepository,
@@ -1879,8 +1882,8 @@ sub _PolicyXML2JSON {
             },
             zsk => {
                 algorithm => {
-                    (defined $zlength ? (length => $zlength) : ()),
-                    value => $zvalue
+                    (defined $zlength ? (length => int($zlength)) : ()),
+                    value => int($zvalue)
                 },
                 lifetime => $zlifetime,
                 repository => $zrepository,
@@ -1897,7 +1900,7 @@ sub _PolicyXML2JSON {
             $propagation_delay = $self->__XMLEleReq($node, 'Zone/PropagationDelay');
             $ttl = $self->__XMLEleReq($node, 'Zone/SOA/TTL');
             $minimum = $self->__XMLEleReq($node, 'Zone/SOA/Minimum');
-            $serial = $self->__XMLBoolEle($node, 'Zone/SOA/Serial');
+            $serial = $self->__XMLEleReq($node, 'Zone/SOA/Serial');
         };
         if ($@) {
             die 'Error in Policy '.$name.' Zone: '.$@;
