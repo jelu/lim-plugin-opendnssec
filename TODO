@@ -1,3 +1,4 @@
 - pkg: adduser lim-agentd opendnssec
 - pkg: chmod g+w /etc/opendnssec/*
 - revise handling of configs and tempfile usage
+- check file/directory access
