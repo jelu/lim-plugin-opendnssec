@@ -2791,7 +2791,7 @@ sub UpdateControlStart {
                 }
                 if (my $program = shift(@programs)) {
                     Lim::Util::run_cmd
-                        [ 'ods-control', $program, 'start' ],
+                        [ 'sudo', 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
                         '>', sub {
                             if (defined $_[0]) {
@@ -2825,7 +2825,7 @@ sub UpdateControlStart {
     else {
         weaken($self);
         Lim::Util::run_cmd
-            [ 'ods-control', 'start' ],
+            [ 'sudo', 'ods-control', 'start' ],
             '<', '/dev/null',
             '>', sub {
                 if (defined $_[0]) {
@@ -2890,7 +2890,7 @@ sub UpdateControlStop {
                 }
                 if (my $program = shift(@programs)) {
                     Lim::Util::run_cmd
-                        [ 'ods-control', $program, 'stop' ],
+                        [ 'sudo', 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
                         '>', sub {
                             if (defined $_[0]) {
@@ -2924,7 +2924,7 @@ sub UpdateControlStop {
     else {
         weaken($self);
         Lim::Util::run_cmd
-            [ 'ods-control', 'stop' ],
+            [ 'sudo', 'ods-control', 'stop' ],
             '<', '/dev/null',
             '>', sub {
                 if (defined $_[0]) {
