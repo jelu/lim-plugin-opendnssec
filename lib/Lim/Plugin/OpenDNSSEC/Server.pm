@@ -2790,17 +2790,17 @@ sub UpdateControlStart {
                     return;
                 }
                 if (my $program = shift(@programs)) {
+                    my $w; $w = AnyEvent->timer(after => 1, interval => 1, cb => sub {
+                        $cb->reset_timeout;
+                    });
                     Lim::Util::run_cmd
                         [ 'sudo', 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
-                        '>', sub {
-                            if (defined $_[0]) {
-                                $cb->reset_timeout;
-                            }
-                        },
+                        '>', '/dev/null',
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
+                            undef $w;
                             unless (defined $self) {
                                 undef($cmd_cb);
                                 return;
@@ -2824,17 +2824,18 @@ sub UpdateControlStart {
     }
     else {
         weaken($self);
+        my $w; $w = AnyEvent->timer(after => 1, interval => 1, cb => sub {
+            $cb->reset_timeout;
+        });
         Lim::Util::run_cmd
             [ 'sudo', 'ods-control', 'start' ],
             '<', '/dev/null',
-            '>', sub {
-                if (defined $_[0]) {
-                    $cb->reset_timeout;
-                }
-            },
+            '>', '/dev/null',
             '2>', '/dev/null',
+            close_all => 1,
             timeout => 30,
             cb => sub {
+                undef $w;
                 unless (defined $self) {
                     return;
                 }
@@ -2889,17 +2890,17 @@ sub UpdateControlStop {
                     return;
                 }
                 if (my $program = shift(@programs)) {
+                    my $w; $w = AnyEvent->timer(after => 1, interval => 1, cb => sub {
+                        $cb->reset_timeout;
+                    });
                     Lim::Util::run_cmd
                         [ 'sudo', 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
-                        '>', sub {
-                            if (defined $_[0]) {
-                                $cb->reset_timeout;
-                            }
-                        },
+                        '>', '/dev/null',
                         '2>', '/dev/null',
                         timeout => 30,
                         cb => sub {
+                            undef $w;
                             unless (defined $self) {
                                 undef($cmd_cb);
                                 return;
@@ -2923,17 +2924,17 @@ sub UpdateControlStop {
     }
     else {
         weaken($self);
+        my $w; $w = AnyEvent->timer(after => 1, interval => 1, cb => sub {
+            $cb->reset_timeout;
+        });
         Lim::Util::run_cmd
             [ 'sudo', 'ods-control', 'stop' ],
             '<', '/dev/null',
-            '>', sub {
-                if (defined $_[0]) {
-                    $cb->reset_timeout;
-                }
-            },
+            '>', '/dev/null',
             '2>', '/dev/null',
             timeout => 30,
             cb => sub {
+                undef $w;
                 unless (defined $self) {
                     return;
                 }
