@@ -2794,7 +2794,7 @@ sub UpdateControlStart {
                         $cb->reset_timeout;
                     });
                     Lim::Util::run_cmd
-                        [ 'sudo', 'ods-control', $program, 'start' ],
+                        [ 'sudo', '-n', 'ods-control', $program, 'start' ],
                         '<', '/dev/null',
                         '>', '/dev/null',
                         '2>', '/dev/null',
@@ -2828,7 +2828,7 @@ sub UpdateControlStart {
             $cb->reset_timeout;
         });
         Lim::Util::run_cmd
-            [ 'sudo', 'ods-control', 'start' ],
+            [ 'sudo', '-n', 'ods-control', 'start' ],
             '<', '/dev/null',
             '>', '/dev/null',
             '2>', '/dev/null',
@@ -2894,7 +2894,7 @@ sub UpdateControlStop {
                         $cb->reset_timeout;
                     });
                     Lim::Util::run_cmd
-                        [ 'sudo', 'ods-control', $program, 'stop' ],
+                        [ 'sudo', '-n', 'ods-control', $program, 'stop' ],
                         '<', '/dev/null',
                         '>', '/dev/null',
                         '2>', '/dev/null',
@@ -2928,7 +2928,7 @@ sub UpdateControlStop {
             $cb->reset_timeout;
         });
         Lim::Util::run_cmd
-            [ 'sudo', 'ods-control', 'stop' ],
+            [ 'sudo', '-n', 'ods-control', 'stop' ],
             '<', '/dev/null',
             '>', '/dev/null',
             '2>', '/dev/null',
@@ -5138,7 +5138,7 @@ sub ReadSignerZones {
 
     weaken($self);
     my ($data, $stderr, @zones);
-    Lim::Util::run_cmd [ 'ods-signer', 'zones' ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'zones' ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
@@ -5203,7 +5203,7 @@ sub UpdateSignerSign {
                 my ($stdout, $stderr);
                 Lim::Util::run_cmd
                     [
-                        'ods-signer', 'sign', $zone->{name}
+                        'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'sign', $zone->{name}
                     ],
                     '<', '/dev/null',
                     '>', sub {
@@ -5239,7 +5239,7 @@ sub UpdateSignerSign {
         my ($stdout, $stderr);
         Lim::Util::run_cmd
             [
-                'ods-signer', 'sign', '--all'
+                'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'sign', '--all'
             ],
             '<', '/dev/null',
             '>', sub {
@@ -5286,7 +5286,7 @@ sub UpdateSignerClear {
             my ($stdout, $stderr);
             Lim::Util::run_cmd
                 [
-                    'ods-signer', 'clear', $zone->{name}
+                    'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'clear', $zone->{name}
                 ],
                 '<', '/dev/null',
                 '>', sub {
@@ -5332,7 +5332,7 @@ sub ReadSignerQueue {
 
     weaken($self);
     my ($data, $stderr, @task, $now);
-    Lim::Util::run_cmd [ 'ods-signer', 'queue' ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'queue' ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
@@ -5392,7 +5392,7 @@ sub UpdateSignerFlush {
 
     weaken($self);
     my ($stdout, $stderr);
-    Lim::Util::run_cmd [ 'ods-signer', 'flush' ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'flush' ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
@@ -5438,7 +5438,7 @@ sub UpdateSignerUpdate {
                 my ($stdout, $stderr);
                 Lim::Util::run_cmd
                     [
-                        'ods-signer', 'update', $zone->{name}
+                        'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'update', $zone->{name}
                     ],
                     '<', '/dev/null',
                     '>', sub {
@@ -5474,7 +5474,7 @@ sub UpdateSignerUpdate {
         my ($stdout, $stderr);
         Lim::Util::run_cmd
             [
-                'ods-signer', 'update', '--all'
+                'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'update', '--all'
             ],
             '<', '/dev/null',
             '>', sub {
@@ -5512,7 +5512,7 @@ sub ReadSignerRunning {
 
     weaken($self);
     my ($stdout, $stderr);
-    Lim::Util::run_cmd [ 'ods-signer', 'running' ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'running' ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
@@ -5552,7 +5552,7 @@ sub UpdateSignerReload {
 
     weaken($self);
     my ($stdout, $stderr);
-    Lim::Util::run_cmd [ 'ods-signer', 'reload' ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'reload' ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
@@ -5588,7 +5588,7 @@ sub UpdateSignerVerbosity {
 
     weaken($self);
     my ($stdout, $stderr);
-    Lim::Util::run_cmd [ 'ods-signer', 'verbosity', $q->{verbosity} ],
+    Lim::Util::run_cmd [ 'sudo', '-n', '-u', 'opendnssec', 'ods-signer', 'verbosity', $q->{verbosity} ],
         '<', '/dev/null',
         '>', sub {
             if (defined $_[0]) {
