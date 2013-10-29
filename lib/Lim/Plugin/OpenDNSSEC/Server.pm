@@ -1092,6 +1092,7 @@ sub CreateRepository {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
@@ -1386,6 +1387,7 @@ sub UpdateRepository {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
@@ -1584,6 +1586,7 @@ sub DeleteRepository {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
@@ -2218,6 +2221,7 @@ sub CreatePolicy {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
@@ -2506,6 +2510,7 @@ sub UpdatePolicy {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
@@ -2698,6 +2703,7 @@ sub DeletePolicy {
     }
     
     $fh->seek(0, SEEK_SET);
+    $fh->truncate(0);
     unless ($dom->toFH($fh)) {
         $fh->seek(0, SEEK_SET);
         $tmp->seek(0, SEEK_SET);
