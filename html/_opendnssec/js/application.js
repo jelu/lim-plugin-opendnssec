@@ -844,7 +844,7 @@
 	    						$('<i></i>')
 	    						.text('Signing zone '+zone+' ...')
     						));
-	    				window.lim.postJSON('/opendnssec/signer_sign', {
+	    				window.lim.putJSON('/opendnssec/signer_sign', {
 	    					zone: {
 	    						name: zone
 	    					}
@@ -885,7 +885,7 @@
 	    						.text('Clearing zone '+zone+' from the Signer ...')
     						));
 		    			$('#clearZone').modal('hide');
-	    				window.lim.postJSON('/opendnssec/signer_clear', {
+	    				window.lim.putJSON('/opendnssec/signer_clear', {
 	    					zone: {
 	    						name: zone
 	    					}
@@ -980,7 +980,7 @@
 	    						.text('Flushing signer queue ...')
     						));
 		    			$('#flushQueue').modal('hide');
-	    				window.lim.postJSON('/opendnssec/signer_flush')
+	    				window.lim.putJSON('/opendnssec/signer_flush')
 	    				.done(function (data) {
 							$('#opendnssec-content p')
 							.text('Flushed signer queue successfully')

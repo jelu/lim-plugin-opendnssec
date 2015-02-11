@@ -12,10 +12,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 BuildRequires:  perl(ExtUtils::MakeMaker)
 BuildRequires:  perl(Test::Simple)
-BuildRequires:  perl(Lim) >= 0.16
+BuildRequires:  perl(Lim) >= 0.20
 
 Requires:  perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
-Requires:  perl(Lim) >= 0.16
+Requires:  perl(Lim) >= 0.20
 
 %description
 This plugin lets you manage a OpenDNSSEC installation via Lim.
@@ -50,7 +50,7 @@ CLI perl libraries for controlling a local or remote OpenDNSSEC installation
 via OpenDNSSEC Lim plugin.
 
 %package -n lim-management-console-opendnssec
-Requires: lim-management-console-common >= 0.16
+Requires: lim-management-console-common >= 0.20
 Summary: OpenDNSSEC Lim plugin Management Console files
 Group: Development/Libraries
 Version: 0.14
